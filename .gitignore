@@ -1,10 +1,8 @@
 node_modules/
-**/node_modules/
-.vite/
-**/.vite/
-dist/
-build/
+backend/node_modules/
+frontend/node_modules/
 .env
 backend/.env
 frontend/.env
-.DS_Store
+dist/
+.vite/
