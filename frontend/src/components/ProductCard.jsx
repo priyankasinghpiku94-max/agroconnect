@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
+import VerificationBadge from "./VerificationBadge";
 
 export default function ProductCard({ product }) {
-  const phone = product?.farmer_phone || "9835804351";
+  const phone = product?.farmer_phone || "";
   const cleanPhone = phone.replace(/\D/g, "");
   const whatsappPhone = cleanPhone.startsWith("91")
     ? cleanPhone
@@ -22,7 +23,10 @@ export default function ProductCard({ product }) {
       </div>
 
       <div className="card-body">
-        <span className="badge">{product?.category}</span>
+        <div className="product-card-badges">
+          <span className="badge">{product?.category}</span>
+          {product?.farmer_verified && <VerificationBadge status="verified" />}
+        </div>
 
         <h3>{product?.crop_name}</h3>
 
@@ -34,6 +38,11 @@ export default function ProductCard({ product }) {
 
         <p className="product-meta">
           Available: {product?.quantity} {product?.unit}
+        </p>
+
+        <p className="product-meta">
+          MOQ: {product?.min_order_quantity || 1} {product?.unit} · Grade{" "}
+          {product?.quality_grade || "Standard"}
         </p>
 
         <p className="product-meta">Location: {product?.location}</p>

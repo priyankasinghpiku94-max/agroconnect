@@ -3985,7 +3985,7 @@ th {
 }
 
 .phase-one-stats {
-  grid-template-columns: repeat(6, minmax(130px, 1fr));
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
 }
 
 .pending-stat {
@@ -4034,5 +4034,472 @@ th {
   .profile-edit-card,
   .kyc-card {
     padding: 22px;
+  }
+}
+
+/* AgroConnect Phase 2: demand board, quotations and notifications */
+.phase-two-page {
+  min-height: 100vh;
+  padding: 52px 0 80px;
+  background:
+    radial-gradient(circle at 12% 15%, rgba(34, 197, 94, 0.1), transparent 28%),
+    radial-gradient(circle at 88% 22%, rgba(132, 204, 22, 0.08), transparent 26%),
+    #04130b;
+  color: #f8fafc;
+}
+
+.phase-two-container {
+  width: min(1220px, 92%);
+  margin: 0 auto;
+}
+
+.phase-two-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 28px;
+  padding: 34px;
+  border: 1px solid rgba(134, 239, 172, 0.18);
+  border-radius: 30px;
+  background:
+    linear-gradient(125deg, rgba(7, 39, 23, 0.98), rgba(4, 22, 13, 0.96)),
+    #071f14;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.3);
+}
+
+.phase-two-badge,
+.phase-two-eyebrow {
+  display: block;
+  margin: 0 0 11px;
+  color: #86efac;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.phase-two-hero h1 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+}
+
+.phase-two-hero h1 span {
+  color: #86efac;
+}
+
+.phase-two-hero p:not(.phase-two-badge) {
+  max-width: 760px;
+  margin: 16px 0 0;
+  color: #b8c7bd;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.demand-create-card,
+.demand-filter-card,
+.demand-card,
+.negotiation-card,
+.phase-two-empty,
+.phase-two-loading {
+  border: 1px solid rgba(134, 239, 172, 0.16);
+  background:
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 36%),
+    rgba(7, 28, 17, 0.96);
+  box-shadow: 0 24px 65px rgba(0, 0, 0, 0.22);
+}
+
+.demand-create-card {
+  margin-bottom: 28px;
+  padding: 30px;
+  border-radius: 28px;
+}
+
+.demand-create-card label,
+.inline-quote-form label,
+.counter-form label {
+  display: block;
+  margin-bottom: 8px;
+  color: #dcfce7;
+  font-weight: 800;
+}
+
+.grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.demand-form-grid {
+  margin-bottom: 20px;
+}
+
+.demand-filter-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.35fr) auto;
+  gap: 14px;
+  margin-bottom: 28px;
+  padding: 20px;
+  border-radius: 22px;
+}
+
+.demand-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.demand-card {
+  padding: 25px;
+  border-radius: 26px;
+}
+
+.demand-card-head,
+.demand-card-footer,
+.negotiation-head,
+.negotiation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.demand-card h2,
+.negotiation-card h2 {
+  margin: 10px 0 0;
+  color: #fff;
+  font-size: 27px;
+}
+
+.deal-status {
+  display: inline-flex;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: capitalize;
+}
+
+.deal-status.open,
+.deal-status.accepted {
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+}
+
+.deal-status.submitted,
+.deal-status.countered {
+  background: rgba(59, 130, 246, 0.14);
+  color: #bfdbfe;
+}
+
+.deal-status.awarded {
+  background: rgba(168, 85, 247, 0.16);
+  color: #e9d5ff;
+}
+
+.deal-status.rejected,
+.deal-status.closed,
+.deal-status.expired {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fecaca;
+}
+
+.demand-metrics,
+.offer-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 22px 0;
+}
+
+.demand-metrics div,
+.offer-summary div {
+  padding: 14px;
+  border: 1px solid rgba(134, 239, 172, 0.12);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.demand-metrics span,
+.offer-summary span {
+  display: block;
+  margin-bottom: 7px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.demand-metrics strong,
+.offer-summary strong {
+  color: #f0fdf4;
+  font-size: 14px;
+}
+
+.demand-location {
+  color: #86efac;
+  font-weight: 800;
+}
+
+.demand-description,
+.offer-message {
+  min-height: 48px;
+  color: #b8c7bd;
+  line-height: 1.65;
+}
+
+.demand-card-footer {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(134, 239, 172, 0.12);
+}
+
+.demand-card-footer div {
+  display: grid;
+  gap: 4px;
+}
+
+.demand-card-footer span {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.inline-quote-form {
+  margin-top: 22px;
+  padding: 20px;
+  border: 1px solid rgba(134, 239, 172, 0.2);
+  border-radius: 20px;
+  background: rgba(2, 18, 10, 0.75);
+}
+
+.inline-quote-form h3 {
+  margin: 0 0 18px;
+}
+
+.inline-quote-form > input,
+.inline-quote-form > select,
+.inline-quote-form > textarea {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.phase-two-loading,
+.phase-two-empty {
+  display: grid;
+  place-items: center;
+  min-height: 260px;
+  padding: 38px;
+  border-radius: 28px;
+  text-align: center;
+}
+
+.phase-two-empty h1,
+.phase-two-empty h2 {
+  margin: 6px 0 8px;
+}
+
+.phase-two-empty p {
+  max-width: 560px;
+  margin: 0 0 22px;
+  color: #b8c7bd;
+  line-height: 1.65;
+}
+
+.negotiation-list,
+.notification-list {
+  display: grid;
+  gap: 20px;
+}
+
+.negotiation-card {
+  padding: 28px;
+  border-radius: 28px;
+}
+
+.negotiation-head p {
+  margin: 8px 0 0;
+  color: #b8c7bd;
+}
+
+.offer-message {
+  min-height: auto;
+  margin: 18px 0;
+  padding: 15px 18px;
+  border-left: 3px solid #22c55e;
+  border-radius: 0 14px 14px 0;
+  background: rgba(34, 197, 94, 0.07);
+}
+
+.negotiation-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.waiting-chip {
+  padding: 9px 13px;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #fde68a;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.counter-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 20px;
+  background: rgba(3, 19, 32, 0.58);
+}
+
+.offer-timeline {
+  display: grid;
+  gap: 0;
+  margin-top: 22px;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(2, 18, 10, 0.6);
+}
+
+.offer-event {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 12px;
+  min-height: 88px;
+}
+
+.offer-event:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 19px;
+  bottom: 0;
+  width: 2px;
+  background: rgba(134, 239, 172, 0.18);
+}
+
+.timeline-dot {
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 4px solid #14532d;
+  border-radius: 50%;
+  background: #86efac;
+}
+
+.offer-event p,
+.offer-event small,
+.offer-event time {
+  display: block;
+  margin: 6px 0 0;
+  color: #b8c7bd;
+}
+
+.offer-event time {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.notification-container {
+  max-width: 980px;
+}
+
+.notification-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid rgba(134, 239, 172, 0.14);
+  border-radius: 20px;
+  background: rgba(7, 28, 17, 0.95);
+  color: #f8fafc;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notification-card.unread {
+  border-color: rgba(34, 197, 94, 0.38);
+  background: rgba(10, 47, 27, 0.98);
+}
+
+.notification-card.read {
+  opacity: 0.75;
+}
+
+.notification-icon {
+  color: #86efac;
+  font-size: 18px;
+}
+
+.notification-card p {
+  margin: 7px 0;
+  color: #b8c7bd;
+}
+
+.notification-card time {
+  color: #64748b;
+  font-size: 12px;
+}
+
+@media (max-width: 1350px) and (min-width: 769px) {
+  .nav-container {
+    width: min(1280px, 96%);
+  }
+
+  .nav-menu {
+    gap: 5px;
+  }
+
+  .nav-menu a {
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 900px) {
+  .phase-two-hero,
+  .demand-card-footer,
+  .negotiation-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .grid.three,
+  .demand-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .demand-metrics,
+  .offer-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .phase-two-page {
+    padding-top: 28px;
+  }
+
+  .phase-two-hero,
+  .demand-create-card,
+  .demand-card,
+  .negotiation-card {
+    padding: 22px;
+  }
+
+  .demand-filter-card,
+  .counter-form,
+  .demand-metrics,
+  .offer-summary {
+    grid-template-columns: 1fr;
   }
 }

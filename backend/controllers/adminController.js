@@ -19,6 +19,12 @@ export const getStats = async (req, res) => {
     const [[pendingVerifications]] = await db.query(
       "SELECT COUNT(*) AS count FROM users WHERE verificationStatus = 'pending'"
     );
+    const [[openDemands]] = await db.query(
+      "SELECT COUNT(*) AS count FROM demands WHERE status = 'open'"
+    );
+    const [[activeQuotations]] = await db.query(
+      "SELECT COUNT(*) AS count FROM quotations WHERE status IN ('submitted', 'countered')"
+    );
 
     res.json({
       success: true,
@@ -29,6 +35,8 @@ export const getStats = async (req, res) => {
         totalProducts: totalProducts.count,
         totalOrders: totalOrders.count,
         pendingVerifications: pendingVerifications.count,
+        openDemands: openDemands.count,
+        activeQuotations: activeQuotations.count,
       },
     });
   } catch (error) {
@@ -116,7 +124,9 @@ export const getAdminOrders = async (req, res) => {
         p.productName AS crop_name,
         f.fullName AS farmer_name,
         d.fullName AS distributor_name,
-        (CAST(o.quantity AS DECIMAL(10,2)) * p.price) AS total_price,
+        (CAST(o.quantity AS DECIMAL(12,2)) * COALESCE(o.agreedPrice, p.price))
+          AS total_price,
+        CASE WHEN o.quotationId IS NULL THEN 'direct' ELSE 'demand' END AS source,
         o.status
       FROM orders o
       LEFT JOIN products p ON o.productId = p.id

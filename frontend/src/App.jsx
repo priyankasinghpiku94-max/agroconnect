@@ -12,6 +12,9 @@ import ProductDetails from "./pages/ProductDetails";
 import MyOrders from "./pages/MyOrders";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
+import DemandBoard from "./pages/DemandBoard";
+import Negotiations from "./pages/Negotiations";
+import Notifications from "./pages/Notifications";
 
 export default function App() {
   return (
@@ -66,6 +69,33 @@ export default function App() {
           element={
             <ProtectedRoute roles={["farmer", "distributor"]}>
               <MyOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/demands"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor"]}>
+              <DemandBoard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/negotiations"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor"]}>
+              <Negotiations />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
             </ProtectedRoute>
           }
         />

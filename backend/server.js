@@ -10,6 +10,9 @@ import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import verificationRoutes from "./routes/verificationRoutes.js";
+import demandRoutes from "./routes/demandRoutes.js";
+import quotationRoutes from "./routes/quotationRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 import { productUploadDir } from "./middleware/uploadMiddleware.js";
 
 dotenv.config();
@@ -73,6 +76,9 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/verification", verificationRoutes);
+app.use("/api/demands", demandRoutes);
+app.use("/api/quotations", quotationRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: "API route not found" });

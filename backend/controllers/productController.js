@@ -414,6 +414,25 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
+    const [[businessLinks]] = await db.query(
+      `
+      SELECT
+        (SELECT COUNT(*) FROM orders WHERE productId = ?) AS order_count,
+        (SELECT COUNT(*) FROM quotations WHERE productId = ?) AS quotation_count
+      `,
+      [req.params.id, req.params.id]
+    );
+    if (
+      Number(businessLinks.order_count) > 0 ||
+      Number(businessLinks.quotation_count) > 0
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "This product has business history and cannot be deleted. Pause the listing instead.",
+      });
+    }
+
     await db.query("DELETE FROM products WHERE id = ? AND farmerId = ?", [
       req.params.id,
       req.user.id,

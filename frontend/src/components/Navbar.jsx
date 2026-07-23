@@ -32,19 +32,23 @@ export default function Navbar() {
               {user.role === "farmer" && (
                 <>
                   <NavLink to="/farmer/products">My Products</NavLink>
-                  <NavLink to="/farmer/add-product">Add Product</NavLink>
+                  <NavLink to="/demands">Demand Board</NavLink>
+                  <NavLink to="/negotiations">Negotiations</NavLink>
                   <NavLink to="/orders">Orders</NavLink>
                 </>
               )}
 
               {user.role === "distributor" && (
                 <>
+                  <NavLink to="/demands">My Demands</NavLink>
+                  <NavLink to="/negotiations">Negotiations</NavLink>
                   <NavLink to="/orders">My Orders</NavLink>
-                  <NavLink to="/profile">Profile</NavLink>
                 </>
               )}
 
               {user.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
+              <NavLink to="/notifications">Notifications</NavLink>
+              {user.role !== "admin" && <NavLink to="/profile">Profile</NavLink>}
 
               <button className="logout-btn" onClick={handleLogout}>
                 Logout

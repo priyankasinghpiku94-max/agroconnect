@@ -89,6 +89,24 @@ export default function Dashboard() {
                 View Orders
               </Link>
             </div>
+
+            <div className="dashboard-action-card">
+              <div className="action-icon">📣</div>
+              <h3>Demand Board</h3>
+              <p>Find verified bulk demand and submit quotations.</p>
+              <Link className="btn secondary dashboard-btn" to="/demands">
+                Browse Demands
+              </Link>
+            </div>
+
+            <div className="dashboard-action-card">
+              <div className="action-icon">🤝</div>
+              <h3>Negotiations</h3>
+              <p>Review offers, counter prices and confirm deals.</p>
+              <Link className="btn secondary dashboard-btn" to="/negotiations">
+                Open Negotiations
+              </Link>
+            </div>
           </section>
         )}
 
@@ -121,6 +139,24 @@ export default function Dashboard() {
 
               <Link className="btn secondary dashboard-btn" to="/profile">
                 Profile
+              </Link>
+            </div>
+
+            <div className="dashboard-action-card">
+              <div className="action-icon">📣</div>
+              <h3>Purchase Demands</h3>
+              <p>Publish bulk requirements for verified farmers.</p>
+              <Link className="btn dashboard-btn" to="/demands">
+                Manage Demands
+              </Link>
+            </div>
+
+            <div className="dashboard-action-card">
+              <div className="action-icon">🤝</div>
+              <h3>Negotiations</h3>
+              <p>Accept, reject or counter farmer quotations.</p>
+              <Link className="btn secondary dashboard-btn" to="/negotiations">
+                Review Offers
               </Link>
             </div>
           </section>

@@ -122,7 +122,12 @@ export default function MyOrders() {
                           <div className="order-crop-icon">🌾</div>
                           <div>
                             <strong>{order.crop_name || "N/A"}</strong>
-                            <p>Order ID: #{order.id}</p>
+                            <p>
+                              Order #{order.id} ·{" "}
+                              {order.source === "demand"
+                                ? "Demand quotation"
+                                : "Direct marketplace"}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -135,6 +140,9 @@ export default function MyOrders() {
                         <strong className="order-price">
                           ₹{order.total_price || 0}
                         </strong>
+                        <small className="stock-minimum">
+                          ₹{order.unit_price || 0}/{order.unit || "unit"}
+                        </small>
                       </td>
 
                       <td>

@@ -1,6 +1,8 @@
 import { db } from "../config/db.js";
+import { createNotification } from "../utils/notifications.js";
 
 export const createOrder = async (req, res) => {
+  let connection;
   try {
     const quantity = Number(req.body.quantity);
     if (!Number.isFinite(quantity) || quantity <= 0) {
@@ -10,45 +12,54 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    const [products] = await db.query(
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    const [products] = await connection.query(
       `
-      SELECT farmerId, price, quantity, minOrderQuantity, status
-      FROM products
+      SELECT p.farmerId, p.productName, p.price, p.quantity,
+        p.minOrderQuantity, p.status
+      FROM products p
       WHERE id = ?
+      FOR UPDATE
       `,
       [req.params.id]
     );
     if (!products.length) {
+      await connection.rollback();
       return res.status(404).json({ success: false, message: "Product not found" });
     }
 
     const product = products[0];
     if (product.status !== "available" || Number(product.quantity) <= 0) {
+      await connection.rollback();
       return res.status(409).json({
         success: false,
         message: "This product is currently out of stock",
       });
     }
     if (quantity < Number(product.minOrderQuantity || 1)) {
+      await connection.rollback();
       return res.status(400).json({
         success: false,
         message: `Minimum order quantity is ${product.minOrderQuantity}`,
       });
     }
     if (quantity > Number(product.quantity)) {
+      await connection.rollback();
       return res.status(400).json({
         success: false,
         message: `Only ${product.quantity} units are currently available`,
       });
     }
     if (Number(product.farmerId) === Number(req.user.id)) {
+      await connection.rollback();
       return res.status(400).json({
         success: false,
         message: "You cannot order your own product",
       });
     }
 
-    const [result] = await db.query(
+    const [result] = await connection.query(
       `
       INSERT INTO orders
       (productId, farmerId, distributorId, quantity, message, status)
@@ -62,6 +73,15 @@ export const createOrder = async (req, res) => {
         String(req.body.message || "").trim().slice(0, 1000),
       ]
     );
+    await createNotification(connection, {
+      userId: product.farmerId,
+      type: "order_received",
+      title: "New direct order request",
+      message: `${req.user.name} requested ${quantity} units of ${product.productName}.`,
+      relatedType: "order",
+      relatedId: result.insertId,
+    });
+    await connection.commit();
 
     res.status(201).json({
       success: true,
@@ -70,8 +90,11 @@ export const createOrder = async (req, res) => {
       total_price: quantity * Number(product.price),
     });
   } catch (error) {
+    if (connection) await connection.rollback();
     console.error("Create order error:", error);
     res.status(500).json({ success: false, message: "Order failed" });
+  } finally {
+    if (connection) connection.release();
   }
 };
 
@@ -87,9 +110,14 @@ export const getMyOrders = async (req, res) => {
         p.productName AS crop_name,
         o.quantity,
         p.unit,
-        (CAST(o.quantity AS DECIMAL(10,2)) * p.price) AS total_price,
+        COALESCE(o.agreedPrice, p.price) AS unit_price,
+        (CAST(o.quantity AS DECIMAL(12,2)) * COALESCE(o.agreedPrice, p.price))
+          AS total_price,
         o.status,
         o.message,
+        o.demandId AS demand_id,
+        o.quotationId AS quotation_id,
+        CASE WHEN o.quotationId IS NULL THEN 'direct' ELSE 'demand' END AS source,
         f.fullName AS farmer_name,
         d.fullName AS distributor_name,
         o.created_at,
@@ -176,6 +204,14 @@ export const updateOrderStatus = async (req, res) => {
       "UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
       [requestedStatus, req.params.id]
     );
+    await createNotification(connection, {
+      userId: order.distributorId,
+      type: `order_${requestedStatus}`,
+      title: `Order ${requestedStatus}`,
+      message: `Order #${order.id} was ${requestedStatus} by the farmer.`,
+      relatedType: "order",
+      relatedId: order.id,
+    });
     await connection.commit();
     res.json({ success: true, message: "Order status updated successfully" });
   } catch (error) {
