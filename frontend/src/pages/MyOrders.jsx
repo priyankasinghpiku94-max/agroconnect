@@ -152,35 +152,39 @@ export default function MyOrders() {
                       <td>
                         {user?.role === "farmer" ? (
                           <div className="table-actions">
-                            <button
-                              className="btn small"
-                              onClick={() =>
-                                updateStatus(order.id, "accepted")
-                              }
-                              disabled={updatingId === order.id}
-                            >
-                              Accept
-                            </button>
+                            {order.status === "pending" && (
+                              <button
+                                className="btn small"
+                                onClick={() => updateStatus(order.id, "accepted")}
+                                disabled={updatingId === order.id}
+                              >
+                                Accept
+                              </button>
+                            )}
 
-                            <button
-                              className="btn small secondary"
-                              onClick={() =>
-                                updateStatus(order.id, "completed")
-                              }
-                              disabled={updatingId === order.id}
-                            >
-                              Complete
-                            </button>
+                            {order.status === "accepted" && (
+                              <button
+                                className="btn small secondary"
+                                onClick={() => updateStatus(order.id, "completed")}
+                                disabled={updatingId === order.id}
+                              >
+                                Complete
+                              </button>
+                            )}
 
-                            <button
-                              className="btn small danger"
-                              onClick={() =>
-                                updateStatus(order.id, "rejected")
-                              }
-                              disabled={updatingId === order.id}
-                            >
-                              Reject
-                            </button>
+                            {["pending", "accepted"].includes(order.status) && (
+                              <button
+                                className="btn small danger"
+                                onClick={() => updateStatus(order.id, "rejected")}
+                                disabled={updatingId === order.id}
+                              >
+                                Reject
+                              </button>
+                            )}
+
+                            {["completed", "rejected"].includes(order.status) && (
+                              <span className="view-text">No action required</span>
+                            )}
                           </div>
                         ) : (
                           <span className="view-text">View Only</span>

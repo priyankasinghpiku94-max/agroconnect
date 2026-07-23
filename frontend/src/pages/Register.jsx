@@ -14,6 +14,9 @@ export default function Register() {
     role: "",
     password: "",
     city: "",
+    state: "Bihar",
+    businessName: "",
+    businessType: "",
   });
 
   const [error, setError] = useState("");
@@ -48,8 +51,10 @@ export default function Register() {
         role: form.role,
         password: form.password,
         city: form.city,
-        state: "Bihar",
+        state: form.state,
         address: form.city,
+        businessName: form.businessName,
+        businessType: form.businessType,
       });
 
       const token = res.data.token;
@@ -165,7 +170,7 @@ export default function Register() {
           </div>
 
           <div>
-            <label>Location</label>
+            <label>City</label>
             <input
               name="city"
               type="text"
@@ -173,6 +178,39 @@ export default function Register() {
               value={form.city}
               onChange={handleChange}
               required
+            />
+          </div>
+
+          <div>
+            <label>State</label>
+            <input
+              name="state"
+              type="text"
+              value={form.state}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label>Farm/Business Name</label>
+            <input
+              name="businessName"
+              type="text"
+              placeholder="Enter farm or business name"
+              value={form.businessName}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <label>Business Type</label>
+            <input
+              name="businessType"
+              type="text"
+              placeholder="Farmer, FPO, wholesaler..."
+              value={form.businessType}
+              onChange={handleChange}
             />
           </div>
 

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import VerificationBadge from "../components/VerificationBadge";
 import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
@@ -33,6 +34,26 @@ export default function Dashboard() {
             </div>
           </div>
         </section>
+
+        {user?.role !== "admin" && (
+          <section className="dashboard-verification-card">
+            <div>
+              <p>Business Verification</p>
+              <h2>
+                <VerificationBadge
+                  status={user?.verification_status || "unsubmitted"}
+                />
+              </h2>
+              <span>
+                Verified accounts can publish crops, place orders and update
+                business transactions.
+              </span>
+            </div>
+            <Link className="btn" to="/profile">
+              Manage Profile & KYC
+            </Link>
+          </section>
+        )}
 
         {user?.role === "farmer" && (
           <section className="dashboard-action-grid">
@@ -99,8 +120,8 @@ export default function Dashboard() {
               <p>Manage your distributor business information.</p>
 
               <Link className="btn secondary dashboard-btn" to="/profile">
-  Profile
-</Link>
+                Profile
+              </Link>
             </div>
           </section>
         )}

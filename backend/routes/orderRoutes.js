@@ -4,12 +4,33 @@ import {
   getMyOrders,
   updateOrderStatus,
 } from "../controllers/orderController.js";
-import { protect } from "../middleware/authMiddleware.js";
+import {
+  protect,
+  allowRoles,
+  requireVerified,
+} from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/:id", protect, createOrder);
-router.get("/my/list", protect, getMyOrders);
-router.put("/:id/status", protect, updateOrderStatus);
+router.post(
+  "/:id",
+  protect,
+  allowRoles("distributor"),
+  requireVerified,
+  createOrder
+);
+router.get(
+  "/my/list",
+  protect,
+  allowRoles("farmer", "distributor"),
+  getMyOrders
+);
+router.put(
+  "/:id/status",
+  protect,
+  allowRoles("farmer"),
+  requireVerified,
+  updateOrderStatus
+);
 
 export default router;

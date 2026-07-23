@@ -2,55 +2,86 @@ import { db } from "../config/db.js";
 
 export const createOrder = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { quantity, message } = req.body;
-
-    const distributorId = req.user?.id || 2;
-
-    const [products] = await db.query(
-      "SELECT farmerId, price FROM products WHERE id = ?",
-      [id]
-    );
-
-    if (products.length === 0) {
-      return res.status(404).json({
+    const quantity = Number(req.body.quantity);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      return res.status(400).json({
         success: false,
-        message: "Product not found",
+        message: "Please enter a valid order quantity",
       });
     }
 
-    const product = products[0];
-    const totalPrice = Number(quantity || 0) * Number(product.price || 0);
+    const [products] = await db.query(
+      `
+      SELECT farmerId, price, quantity, minOrderQuantity, status
+      FROM products
+      WHERE id = ?
+      `,
+      [req.params.id]
+    );
+    if (!products.length) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
 
-    await db.query(
+    const product = products[0];
+    if (product.status !== "available" || Number(product.quantity) <= 0) {
+      return res.status(409).json({
+        success: false,
+        message: "This product is currently out of stock",
+      });
+    }
+    if (quantity < Number(product.minOrderQuantity || 1)) {
+      return res.status(400).json({
+        success: false,
+        message: `Minimum order quantity is ${product.minOrderQuantity}`,
+      });
+    }
+    if (quantity > Number(product.quantity)) {
+      return res.status(400).json({
+        success: false,
+        message: `Only ${product.quantity} units are currently available`,
+      });
+    }
+    if (Number(product.farmerId) === Number(req.user.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot order your own product",
+      });
+    }
+
+    const [result] = await db.query(
       `
       INSERT INTO orders
       (productId, farmerId, distributorId, quantity, message, status)
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, 'pending')
       `,
-      [id, product.farmerId, distributorId, quantity, message || "", "pending"]
+      [
+        req.params.id,
+        product.farmerId,
+        req.user.id,
+        quantity,
+        String(req.body.message || "").trim().slice(0, 1000),
+      ]
     );
 
     res.status(201).json({
       success: true,
       message: "Order request sent successfully",
-      total_price: totalPrice,
+      order_id: result.insertId,
+      total_price: quantity * Number(product.price),
     });
   } catch (error) {
     console.error("Create order error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Order failed",
-    });
+    res.status(500).json({ success: false, message: "Order failed" });
   }
 };
 
 export const getMyOrders = async (req, res) => {
   try {
-    const user = req.user || { id: 1, role: "farmer" };
-
-    let query = `
-      SELECT 
+    const ownerColumn =
+      req.user.role === "farmer" ? "o.farmerId" : "o.distributorId";
+    const [orders] = await db.query(
+      `
+      SELECT
         o.id,
         o.productId AS product_id,
         p.productName AS crop_name,
@@ -61,65 +92,100 @@ export const getMyOrders = async (req, res) => {
         o.message,
         f.fullName AS farmer_name,
         d.fullName AS distributor_name,
-        o.created_at
+        o.created_at,
+        o.updated_at
       FROM orders o
       LEFT JOIN products p ON o.productId = p.id
       LEFT JOIN users f ON o.farmerId = f.id
       LEFT JOIN users d ON o.distributorId = d.id
-    `;
-
-    const values = [];
-
-    if (user.role === "farmer") {
-      query += " WHERE o.farmerId = ?";
-      values.push(user.id);
-    } else if (user.role === "distributor") {
-      query += " WHERE o.distributorId = ?";
-      values.push(user.id);
-    }
-
-    query += " ORDER BY o.id DESC";
-
-    const [orders] = await db.query(query, values);
-
-    res.json({
-      success: true,
-      orders,
-    });
+      WHERE ${ownerColumn} = ?
+      ORDER BY o.id DESC
+      `,
+      [req.user.id]
+    );
+    res.json({ success: true, orders });
   } catch (error) {
     console.error("Get my orders error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch orders",
-    });
+    res.status(500).json({ success: false, message: "Failed to fetch orders" });
   }
 };
 
 export const updateOrderStatus = async (req, res) => {
+  let connection;
   try {
-    const { id } = req.params;
-    const { status } = req.body;
+    connection = await db.getConnection();
+    const requestedStatus = String(req.body.status || "");
+    if (!["accepted", "rejected", "completed"].includes(requestedStatus)) {
+      return res.status(400).json({ success: false, message: "Invalid status" });
+    }
 
-    const allowed = ["pending", "accepted", "rejected", "completed"];
-
-    if (!allowed.includes(status)) {
-      return res.status(400).json({
+    await connection.beginTransaction();
+    const [orders] = await connection.query(
+      `
+      SELECT o.*, p.quantity AS availableQuantity
+      FROM orders o
+      INNER JOIN products p ON o.productId = p.id
+      WHERE o.id = ? AND o.farmerId = ?
+      FOR UPDATE
+      `,
+      [req.params.id, req.user.id]
+    );
+    if (!orders.length) {
+      await connection.rollback();
+      return res.status(404).json({
         success: false,
-        message: "Invalid status",
+        message: "Order not found or you do not own it",
       });
     }
 
-    await db.query("UPDATE orders SET status = ? WHERE id = ?", [status, id]);
+    const order = orders[0];
+    const transitions = {
+      pending: ["accepted", "rejected"],
+      accepted: ["completed", "rejected"],
+      rejected: [],
+      completed: [],
+    };
+    if (!transitions[order.status]?.includes(requestedStatus)) {
+      await connection.rollback();
+      return res.status(409).json({
+        success: false,
+        message: `Order cannot change from ${order.status} to ${requestedStatus}`,
+      });
+    }
 
-    res.json({
-      success: true,
-      message: "Order status updated successfully",
-    });
+    if (requestedStatus === "completed") {
+      const remaining = Number(order.availableQuantity) - Number(order.quantity);
+      if (remaining < 0) {
+        await connection.rollback();
+        return res.status(409).json({
+          success: false,
+          message: "Available stock is lower than this order quantity",
+        });
+      }
+      await connection.query(
+        `
+        UPDATE products
+        SET quantity = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        `,
+        [remaining, remaining === 0 ? "out_of_stock" : "available", order.productId]
+      );
+    }
+
+    await connection.query(
+      "UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [requestedStatus, req.params.id]
+    );
+    await connection.commit();
+    res.json({ success: true, message: "Order status updated successfully" });
   } catch (error) {
+    if (connection) await connection.rollback();
     console.error("Update order status error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to update order status",
     });
+  } finally {
+    if (connection) connection.release();
   }
 };

@@ -8,13 +8,32 @@ export const AuthProvider = ({ children }) => {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
+    const restoreSession = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setAuthLoading(false);
+        return;
+      }
 
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+      try {
+        const res = await api.get("/auth/me");
+        setUser(res.data.user);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+      } catch {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setUser(null);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
 
-    setAuthLoading(false);
+    const handleUnauthorized = () => setUser(null);
+    window.addEventListener("agroconnect:unauthorized", handleUnauthorized);
+    restoreSession();
+
+    return () =>
+      window.removeEventListener("agroconnect:unauthorized", handleUnauthorized);
   }, []);
 
   const login = (userData, token) => {
@@ -34,8 +53,10 @@ export const AuthProvider = ({ children }) => {
       const res = await api.get("/auth/me");
       setUser(res.data.user);
       localStorage.setItem("user", JSON.stringify(res.data.user));
+      return res.data.user;
     } catch {
       logout();
+      return null;
     }
   };
 

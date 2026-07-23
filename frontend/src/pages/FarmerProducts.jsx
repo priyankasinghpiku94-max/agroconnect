@@ -6,21 +6,16 @@ export default function FarmerProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+  const [actionId, setActionId] = useState(null);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       setError("");
-
       const res = await api.get("/products/my");
       setProducts(res.data.products || []);
     } catch (err) {
-      console.error(err);
-      setError(
-        err.response?.data?.message ||
-          "Failed to load products. Please try again."
-      );
+      setError(err.response?.data?.message || "Failed to load products.");
     } finally {
       setLoading(false);
     }
@@ -31,17 +26,29 @@ export default function FarmerProducts() {
   }, []);
 
   const deleteProduct = async (id) => {
-    const confirmDelete = window.confirm("Delete this product?");
-    if (!confirmDelete) return;
-
+    if (!window.confirm("Delete this product permanently?")) return;
     try {
-      setDeleteLoadingId(id);
+      setActionId(id);
       await api.delete(`/products/${id}`);
-      fetchProducts();
+      await fetchProducts();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete product.");
     } finally {
-      setDeleteLoadingId(null);
+      setActionId(null);
+    }
+  };
+
+  const toggleStock = async (product) => {
+    const status =
+      product.status === "available" ? "paused" : "available";
+    try {
+      setActionId(product.id);
+      await api.put(`/products/${product.id}`, { status });
+      await fetchProducts();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update stock status.");
+    } finally {
+      setActionId(null);
     }
   };
 
@@ -50,18 +57,15 @@ export default function FarmerProducts() {
       <div className="farmer-products-container">
         <section className="farmer-products-hero">
           <div>
-            <p className="farmer-products-badge">🌾 Farmer Product Panel</p>
-
+            <p className="farmer-products-badge">🌾 Farmer Inventory Panel</p>
             <h1>
               My Listed <span>Crops</span>
             </h1>
-
             <p>
-              Manage your crop listings, check quantity, update stock status and
-              remove products that are no longer available.
+              Edit crop details, maintain accurate available quantity and pause
+              listings when stock is not ready for sale.
             </p>
           </div>
-
           <Link className="btn add-product-top-btn" to="/farmer/add-product">
             Add Product
           </Link>
@@ -78,11 +82,7 @@ export default function FarmerProducts() {
           <div className="empty-products-card">
             <div className="empty-icon">🌱</div>
             <h2>No Products Added Yet</h2>
-            <p>
-              Start by adding your first crop so distributors can find and order
-              from you.
-            </p>
-
+            <p>Add your first verified crop listing for distributors.</p>
             <Link className="btn" to="/farmer/add-product">
               Add First Product
             </Link>
@@ -94,7 +94,6 @@ export default function FarmerProducts() {
                 <p>Crop Inventory</p>
                 <h2>Product Records</h2>
               </div>
-
               <span>{products.length} Products</span>
             </div>
 
@@ -103,53 +102,73 @@ export default function FarmerProducts() {
                 <thead>
                   <tr>
                     <th>Crop</th>
-                    <th>Category</th>
-                    <th>Quantity</th>
+                    <th>Grade</th>
+                    <th>Stock / MOQ</th>
                     <th>Price</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
-
                 <tbody>
-                  {products.map((p) => (
-                    <tr key={p.id}>
+                  {products.map((product) => (
+                    <tr key={product.id}>
                       <td>
                         <div className="crop-cell">
-                          <div className="crop-icon">🌽</div>
+                          <div className="crop-thumb">
+                            {product.image_url ? (
+                              <img src={product.image_url} alt="" />
+                            ) : (
+                              "🌽"
+                            )}
+                          </div>
                           <div>
-                            <strong>{p.crop_name || "N/A"}</strong>
-                            <p>{p.location || "Location not added"}</p>
+                            <strong>{product.crop_name}</strong>
+                            <p>{product.location || "Location not added"}</p>
                           </div>
                         </div>
                       </td>
-
-                      <td>{p.category || "N/A"}</td>
-
+                      <td>{product.quality_grade || "Standard"}</td>
                       <td>
-                        {p.quantity || 0} {p.unit || ""}
+                        {product.quantity} {product.unit}
+                        <small className="stock-minimum">
+                          Min: {product.min_order_quantity || 1} {product.unit}
+                        </small>
                       </td>
-
                       <td>
                         <strong className="product-price">
-                          ₹{p.price_per_unit || 0}/{p.unit || "unit"}
+                          ₹{product.price_per_unit}/{product.unit}
                         </strong>
                       </td>
-
                       <td>
-                        <span className="product-status-badge">
-                          {p.status || "active"}
+                        <span className={`product-status-badge ${product.status}`}>
+                          {String(product.status).replaceAll("_", " ")}
                         </span>
                       </td>
-
                       <td>
-                        <button
-                          className="btn small danger"
-                          onClick={() => deleteProduct(p.id)}
-                          disabled={deleteLoadingId === p.id}
-                        >
-                          {deleteLoadingId === p.id ? "Deleting..." : "Delete"}
-                        </button>
+                        <div className="table-actions phase-one-actions">
+                          <Link
+                            className="btn small secondary"
+                            to={`/farmer/products/${product.id}/edit`}
+                          >
+                            Edit
+                          </Link>
+                          {!["out_of_stock", "sold"].includes(product.status) && (
+                            <button
+                              className="btn small secondary"
+                              onClick={() => toggleStock(product)}
+                              disabled={actionId === product.id}
+                            >
+                              {product.status === "available" ? "Pause" : "Publish"}
+                            </button>
+                          )}
+                          <button
+                            className="btn small danger"
+                            onClick={() => deleteProduct(product.id)}
+                            disabled={actionId === product.id}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

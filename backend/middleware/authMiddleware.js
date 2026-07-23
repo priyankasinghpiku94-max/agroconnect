@@ -12,7 +12,7 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    const token = authHeader.split(" ")[1];
+    const token = authHeader.slice(7).trim();
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -26,7 +26,13 @@ export const protect = async (req, res, next) => {
         role,
         city,
         state,
-        address
+        address,
+        businessName AS business_name,
+        businessType AS business_type,
+        verificationStatus AS verification_status,
+        verificationNote AS verification_note,
+        isActive AS is_active,
+        created_at
       FROM users
       WHERE id = ?
       `,
@@ -40,10 +46,25 @@ export const protect = async (req, res, next) => {
       });
     }
 
+    if (!users[0].is_active) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account is inactive. Please contact AgroConnect support.",
+      });
+    }
+
     req.user = users[0];
 
     next();
   } catch (error) {
+    if (error?.code === "ER_BAD_FIELD_ERROR") {
+      console.error("Authentication schema error:", error.message);
+      return res.status(500).json({
+        success: false,
+        message: "Phase 1 database migration has not been applied.",
+      });
+    }
+
     return res.status(401).json({
       success: false,
       message: "Invalid or expired token",
@@ -62,4 +83,16 @@ export const allowRoles = (...roles) => {
 
     next();
   };
+};
+
+export const requireVerified = (req, res, next) => {
+  if (req.user?.verification_status !== "verified") {
+    return res.status(403).json({
+      success: false,
+      message: "Admin verification is required for this action.",
+      verification_status: req.user?.verification_status || "unsubmitted",
+    });
+  }
+
+  next();
 };

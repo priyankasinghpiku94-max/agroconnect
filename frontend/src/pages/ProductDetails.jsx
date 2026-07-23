@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
+import VerificationBadge from "../components/VerificationBadge";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProductDetails() {
@@ -151,6 +152,9 @@ export default function ProductDetails() {
               </span>
 
               <h2>{product.crop_name}</h2>
+              {product.farmer_verified && (
+                <VerificationBadge status="verified" />
+              )}
 
               <p className="product-description">
                 {product.description ||
@@ -170,6 +174,18 @@ export default function ProductDetails() {
                   <strong>
                     {product.quantity || 0} {product.unit || ""}
                   </strong>
+                </div>
+
+                <div>
+                  <span>Minimum Order</span>
+                  <strong>
+                    {product.min_order_quantity || 1} {product.unit || ""}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Quality Grade</span>
+                  <strong>{product.quality_grade || "Standard"}</strong>
                 </div>
 
                 <div>
@@ -202,6 +218,9 @@ export default function ProductDetails() {
             <label>Quantity ({product.unit})</label>
             <input
               type="number"
+              min={product.min_order_quantity || 1}
+              max={product.quantity}
+              step="0.01"
               value={order.quantity}
               onChange={(e) =>
                 setOrder({
@@ -209,7 +228,7 @@ export default function ProductDetails() {
                   quantity: e.target.value,
                 })
               }
-              placeholder={`Enter quantity in ${product.unit}`}
+              placeholder={`Minimum ${product.min_order_quantity || 1} ${product.unit}`}
               required
             />
 

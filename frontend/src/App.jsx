@@ -53,6 +53,15 @@ export default function App() {
         />
 
         <Route
+          path="/farmer/products/:id/edit"
+          element={
+            <ProtectedRoute roles={["farmer"]}>
+              <AddProduct />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/orders"
           element={
             <ProtectedRoute roles={["farmer", "distributor"]}>
@@ -62,13 +71,13 @@ export default function App() {
         />
 
         <Route
-  path="/profile"
-  element={
-    <ProtectedRoute>
-      <Profile />
-    </ProtectedRoute>
-  }
-/>
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/admin"
