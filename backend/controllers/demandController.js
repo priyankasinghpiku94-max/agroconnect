@@ -11,6 +11,18 @@ const categories = new Set([
 ]);
 const units = new Set(["kg", "quintal", "ton", "box", "piece"]);
 const grades = new Set(["Any", "A", "B", "C", "Standard"]);
+const procurementTypes = new Set(["spot", "institutional", "recurring"]);
+const deliveryFrequencies = new Set([
+  "one_time",
+  "weekly",
+  "biweekly",
+  "monthly",
+]);
+
+const dateOnly = (value) =>
+  value instanceof Date
+    ? value.toISOString().slice(0, 10)
+    : String(value || "").slice(0, 10);
 
 const demandFields = `
   d.id,
@@ -27,6 +39,10 @@ const demandFields = `
     AS delivery_location,
   d.neededBy AS needed_by,
   d.description,
+  d.procurementType AS procurement_type,
+  d.institutionName AS institution_name,
+  d.deliveryFrequency AS delivery_frequency,
+  d.contractMonths AS contract_months,
   d.status,
   d.awardedQuotationId AS awarded_quotation_id,
   d.created_at,
@@ -50,6 +66,12 @@ const parseDemand = (body, user) => ({
   deliveryState: String(body.delivery_state || user.state || "").trim(),
   neededBy: String(body.needed_by || "").trim(),
   description: String(body.description || "").trim().slice(0, 2000),
+  procurementType: String(body.procurement_type || "spot").trim(),
+  institutionName: String(body.institution_name || "").trim().slice(0, 150),
+  deliveryFrequency: String(
+    body.delivery_frequency || "one_time"
+  ).trim(),
+  contractMonths: Number(body.contract_months || 1),
 });
 
 const validateDemand = (demand) => {
@@ -59,6 +81,31 @@ const validateDemand = (demand) => {
   if (!categories.has(demand.category)) return "Please select a valid category";
   if (!units.has(demand.unit)) return "Please select a valid unit";
   if (!grades.has(demand.qualityGrade)) return "Please select a valid quality grade";
+  if (!procurementTypes.has(demand.procurementType)) {
+    return "Please select a valid procurement type";
+  }
+  if (!deliveryFrequencies.has(demand.deliveryFrequency)) {
+    return "Please select a valid delivery frequency";
+  }
+  if (
+    demand.procurementType !== "spot" &&
+    demand.institutionName.length < 2
+  ) {
+    return "Institution or business name is required";
+  }
+  if (
+    demand.procurementType === "recurring" &&
+    demand.deliveryFrequency === "one_time"
+  ) {
+    return "Recurring procurement requires a delivery frequency";
+  }
+  if (
+    !Number.isInteger(demand.contractMonths) ||
+    demand.contractMonths < 1 ||
+    demand.contractMonths > 24
+  ) {
+    return "Contract duration must be between 1 and 24 months";
+  }
   if (!Number.isFinite(demand.quantity) || demand.quantity <= 0) {
     return "Required quantity must be greater than zero";
   }
@@ -96,9 +143,11 @@ export const createDemand = async (req, res) => {
       INSERT INTO demands
       (
         distributorId, cropName, category, quantity, unit, targetPrice,
-        qualityGrade, deliveryCity, deliveryState, neededBy, description, status
+        qualityGrade, deliveryCity, deliveryState, neededBy, description,
+        procurementType, institutionName, deliveryFrequency, contractMonths,
+        status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')
       `,
       [
         req.user.id,
@@ -112,6 +161,10 @@ export const createDemand = async (req, res) => {
         demand.deliveryState,
         demand.neededBy,
         demand.description,
+        demand.procurementType,
+        demand.institutionName || null,
+        demand.deliveryFrequency,
+        demand.contractMonths,
       ]
     );
 
@@ -234,8 +287,16 @@ export const updateDemand = async (req, res) => {
         delivery_city: req.body.delivery_city ?? current.deliveryCity,
         delivery_state: req.body.delivery_state ?? current.deliveryState,
         needed_by:
-          req.body.needed_by ?? String(current.neededBy).slice(0, 10),
+          req.body.needed_by ?? dateOnly(current.neededBy),
         description: req.body.description ?? current.description,
+        procurement_type:
+          req.body.procurement_type ?? current.procurementType,
+        institution_name:
+          req.body.institution_name ?? current.institutionName,
+        delivery_frequency:
+          req.body.delivery_frequency ?? current.deliveryFrequency,
+        contract_months:
+          req.body.contract_months ?? current.contractMonths,
       },
       req.user
     );
@@ -249,7 +310,9 @@ export const updateDemand = async (req, res) => {
       UPDATE demands
       SET cropName = ?, category = ?, quantity = ?, unit = ?, targetPrice = ?,
         qualityGrade = ?, deliveryCity = ?, deliveryState = ?, neededBy = ?,
-        description = ?, updated_at = CURRENT_TIMESTAMP
+        description = ?, procurementType = ?, institutionName = ?,
+        deliveryFrequency = ?, contractMonths = ?,
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND distributorId = ?
       `,
       [
@@ -263,6 +326,10 @@ export const updateDemand = async (req, res) => {
         demand.deliveryState,
         demand.neededBy,
         demand.description,
+        demand.procurementType,
+        demand.institutionName || null,
+        demand.deliveryFrequency,
+        demand.contractMonths,
         req.params.id,
         req.user.id,
       ]

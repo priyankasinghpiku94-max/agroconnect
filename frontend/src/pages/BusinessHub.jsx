@@ -75,6 +75,18 @@ export default function BusinessHub() {
             </article>
           ))}
         </section>
+
+        <section className="phase-four-bridge">
+          <div>
+            <p>⚡ Phase 4 Expansion</p>
+            <h2>Ready to grow beyond crop trading?</h2>
+            <span>
+              Rent equipment, trade verified inputs, use smart matching and
+              connect with collection centres.
+            </span>
+          </div>
+          <Link className="btn" to="/expansion">Open Expansion Hub</Link>
+        </section>
       </div>
     </main>
   );

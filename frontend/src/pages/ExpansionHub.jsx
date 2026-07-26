@@ -81,6 +81,15 @@ export default function ExpansionHub() {
           <div><strong>Capacity-safe</strong><span>Date and stock checks</span></div>
           <div><strong>No paid key</strong><span>Browser-native voice tools</span></div>
         </section>
+
+        <section className="phase-five-bridge">
+          <div>
+            <p>Phase 5 Business Launch</p>
+            <h2>Convert marketplace activity into trusted fulfilment.</h2>
+            <span>Invoices, payment verification, shipment milestones, inspections and disputes.</span>
+          </div>
+          <Link className="btn" to="/launch">Open Phase 5</Link>
+        </section>
       </div>
     </main>
   );

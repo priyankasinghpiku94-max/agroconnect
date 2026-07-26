@@ -16,6 +16,26 @@ const cropMatches = (productName, demandCrop) => {
     (product === demand || product.includes(demand) || demand.includes(product));
 };
 
+const dateOnly = (value) =>
+  value instanceof Date
+    ? value.toISOString().slice(0, 10)
+    : String(value || "").slice(0, 10);
+
+const addMonthsMinusDay = (dateValue, months) => {
+  const date = new Date(`${dateOnly(dateValue)}T00:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + Number(months));
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().slice(0, 10);
+};
+
+const nextContractDate = (dateValue, frequency) => {
+  const date = new Date(`${dateOnly(dateValue)}T00:00:00Z`);
+  if (frequency === "weekly") date.setUTCDate(date.getUTCDate() + 7);
+  if (frequency === "biweekly") date.setUTCDate(date.getUTCDate() + 14);
+  if (frequency === "monthly") date.setUTCMonth(date.getUTCMonth() + 1);
+  return date.toISOString().slice(0, 10);
+};
+
 const quotationFields = `
   q.id,
   q.demandId AS demand_id,
@@ -38,6 +58,10 @@ const quotationFields = `
   d.deliveryState AS delivery_state,
   d.neededBy AS needed_by,
   d.status AS demand_status,
+  d.procurementType AS procurement_type,
+  d.institutionName AS institution_name,
+  d.deliveryFrequency AS delivery_frequency,
+  d.contractMonths AS contract_months,
   p.productName AS product_name,
   p.quantity AS product_stock,
   p.qualityGrade AS quality_grade,
@@ -58,9 +82,18 @@ const getLockedQuotation = async (connection, quotationId) => {
       d.unit AS demandUnit,
       d.status AS demandStatus,
       d.neededBy,
+      d.procurementType,
+      d.institutionName,
+      d.deliveryFrequency,
+      d.contractMonths,
       p.productName,
       p.category AS productCategory,
       p.quantity AS productStock,
+      (
+        SELECT COALESCE(SUM(o.quantity), 0)
+        FROM orders o
+        WHERE o.productId = p.id AND o.status IN ('pending', 'accepted')
+      ) AS reservedStock,
       p.unit AS productUnit,
       p.minOrderQuantity,
       p.status AS productStatus
@@ -85,8 +118,10 @@ const validateOffer = (quantity, unitPrice, quote) => {
   if (quantity > Number(quote.demandQuantity)) {
     return `Quotation cannot exceed demand quantity ${quote.demandQuantity}`;
   }
-  if (quantity > Number(quote.productStock)) {
-    return `Only ${quote.productStock} ${quote.demandUnit} is available`;
+  const orderableStock =
+    Number(quote.productStock) - Number(quote.reservedStock || 0);
+  if (quantity > orderableStock) {
+    return `Only ${Math.max(0, orderableStock)} ${quote.demandUnit} is available after active orders`;
   }
   if (quantity < Number(quote.minOrderQuantity || 1)) {
     return `Minimum product order is ${quote.minOrderQuantity}`;
@@ -158,9 +193,14 @@ export const submitQuotation = async (req, res) => {
 
     const [products] = await connection.query(
       `
-      SELECT *
-      FROM products
-      WHERE id = ? AND farmerId = ?
+      SELECT p.*,
+        (
+          SELECT COALESCE(SUM(o.quantity), 0)
+          FROM orders o
+          WHERE o.productId = p.id AND o.status IN ('pending', 'accepted')
+        ) AS reservedStock
+      FROM products p
+      WHERE p.id = ? AND p.farmerId = ?
       FOR UPDATE
       `,
       [productId, req.user.id]
@@ -196,6 +236,7 @@ export const submitQuotation = async (req, res) => {
       demandCategory: demand.category,
       demandQuantity: demand.quantity,
       productStock: product.quantity,
+      reservedStock: product.reservedStock,
       demandUnit: demand.unit,
       productName: product.productName,
       productCategory: product.category,
@@ -474,6 +515,47 @@ export const acceptQuotation = async (req, res) => {
         quote.unitPrice,
       ]
     );
+    let contractId = null;
+    if (quote.procurementType === "recurring") {
+      const startDate = dateOnly(quote.neededBy);
+      const endDate = addMonthsMinusDay(startDate, quote.contractMonths);
+      const possibleNextDate = nextContractDate(
+        startDate,
+        quote.deliveryFrequency
+      );
+      const [contractResult] = await connection.query(
+        `
+        INSERT INTO procurement_contracts
+        (
+          demandId, sourceOrderId, productId, farmerId, distributorId,
+          institutionName, cropName, quantity, unit, unitPrice,
+          deliveryFrequency, startDate, endDate, nextDeliveryDate, status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+        `,
+        [
+          quote.demandId,
+          orderResult.insertId,
+          quote.productId,
+          quote.farmerId,
+          quote.distributorId,
+          quote.institutionName,
+          quote.demandCrop,
+          quote.quantity,
+          quote.demandUnit,
+          quote.unitPrice,
+          quote.deliveryFrequency,
+          startDate,
+          endDate,
+          possibleNextDate <= endDate ? possibleNextDate : null,
+        ]
+      );
+      contractId = contractResult.insertId;
+      await connection.query(
+        "UPDATE orders SET contractId = ? WHERE id = ?",
+        [contractId, orderResult.insertId]
+      );
+    }
     await connection.query(
       `
       UPDATE quotations
@@ -553,6 +635,7 @@ export const acceptQuotation = async (req, res) => {
       success: true,
       message: "Quotation accepted and order created",
       order_id: orderResult.insertId,
+      contract_id: contractId,
     });
   } catch (error) {
     if (connection) await connection.rollback();

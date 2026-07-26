@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "../router";
 import VerificationBadge from "../components/VerificationBadge";
 import { useAuth } from "../context/AuthContext";
 
@@ -107,6 +107,26 @@ export default function Dashboard() {
                 Open Negotiations
               </Link>
             </div>
+            <div className="dashboard-action-card phase-three-dashboard-card">
+              <div className="action-icon">👥</div>
+              <h3>Business Growth Hub</h3>
+              <p>Manage FPO, contracts, warehouses and business analytics.</p>
+              <Link className="btn dashboard-btn" to="/business">
+                Open Business Hub
+              </Link>
+            </div>
+            <div className="dashboard-action-card phase-four-dashboard-card">
+              <div className="action-icon">🚜</div>
+              <h3>Phase 4 Expansion</h3>
+              <p>Equipment, agri-inputs, smart matching and collection centres.</p>
+              <Link className="btn dashboard-btn" to="/expansion">Open Expansion</Link>
+            </div>
+            <div className="dashboard-action-card phase-five-dashboard-card">
+              <div className="action-icon">🛡️</div>
+              <h3>Phase 5 Launch</h3>
+              <p>Invoices, delivery tracking, inspections, reviews and disputes.</p>
+              <Link className="btn dashboard-btn" to="/launch">Open Launch Hub</Link>
+            </div>
           </section>
         )}
 
@@ -159,6 +179,26 @@ export default function Dashboard() {
                 Review Offers
               </Link>
             </div>
+            <div className="dashboard-action-card phase-three-dashboard-card">
+              <div className="action-icon">🏛️</div>
+              <h3>Business Growth Hub</h3>
+              <p>Manage recurring contracts, storage and procurement analytics.</p>
+              <Link className="btn dashboard-btn" to="/business">
+                Open Business Hub
+              </Link>
+            </div>
+            <div className="dashboard-action-card phase-four-dashboard-card">
+              <div className="action-icon">✨</div>
+              <h3>Phase 4 Expansion</h3>
+              <p>Input sales, equipment rental, price alerts and smart matches.</p>
+              <Link className="btn dashboard-btn" to="/expansion">Open Expansion</Link>
+            </div>
+            <div className="dashboard-action-card phase-five-dashboard-card">
+              <div className="action-icon">₹</div>
+              <h3>Phase 5 Launch</h3>
+              <p>Payments, subscriptions, shipment tracking and business trust.</p>
+              <Link className="btn dashboard-btn" to="/launch">Open Launch Hub</Link>
+            </div>
           </section>
         )}
 
@@ -172,6 +212,26 @@ export default function Dashboard() {
               <Link className="btn dashboard-btn" to="/admin">
                 Open Admin
               </Link>
+            </div>
+            <div className="dashboard-action-card phase-three-dashboard-card">
+              <div className="action-icon">📈</div>
+              <h3>Business Operations</h3>
+              <p>Manage warehouses, institutional contracts and analytics.</p>
+              <Link className="btn secondary dashboard-btn" to="/business">
+                Open Business Hub
+              </Link>
+            </div>
+            <div className="dashboard-action-card phase-four-dashboard-card">
+              <div className="action-icon">🏪</div>
+              <h3>Expansion Operations</h3>
+              <p>Manage equipment, inputs, alerts and collection centres.</p>
+              <Link className="btn dashboard-btn" to="/expansion">Open Phase 4</Link>
+            </div>
+            <div className="dashboard-action-card phase-five-dashboard-card">
+              <div className="action-icon">⚖️</div>
+              <h3>Phase 5 Operations</h3>
+              <p>Verify payments, control fulfilment and resolve disputes.</p>
+              <Link className="btn dashboard-btn" to="/launch">Open Phase 5</Link>
             </div>
           </section>
         )}

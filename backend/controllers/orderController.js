@@ -17,7 +17,12 @@ export const createOrder = async (req, res) => {
     const [products] = await connection.query(
       `
       SELECT p.farmerId, p.productName, p.price, p.quantity,
-        p.minOrderQuantity, p.status
+        p.minOrderQuantity, p.status,
+        (
+          SELECT COALESCE(SUM(o.quantity), 0)
+          FROM orders o
+          WHERE o.productId = p.id AND o.status IN ('pending', 'accepted')
+        ) AS reservedQuantity
       FROM products p
       WHERE id = ?
       FOR UPDATE
@@ -44,11 +49,13 @@ export const createOrder = async (req, res) => {
         message: `Minimum order quantity is ${product.minOrderQuantity}`,
       });
     }
-    if (quantity > Number(product.quantity)) {
+    const orderableQuantity =
+      Number(product.quantity) - Number(product.reservedQuantity || 0);
+    if (quantity > orderableQuantity) {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: `Only ${product.quantity} units are currently available`,
+        message: `Only ${Math.max(0, orderableQuantity)} units are currently available after active orders`,
       });
     }
     if (Number(product.farmerId) === Number(req.user.id)) {
@@ -117,7 +124,12 @@ export const getMyOrders = async (req, res) => {
         o.message,
         o.demandId AS demand_id,
         o.quotationId AS quotation_id,
-        CASE WHEN o.quotationId IS NULL THEN 'direct' ELSE 'demand' END AS source,
+        o.contractId AS contract_id,
+        CASE
+          WHEN o.contractId IS NOT NULL THEN 'contract'
+          WHEN o.quotationId IS NOT NULL THEN 'demand'
+          ELSE 'direct'
+        END AS source,
         f.fullName AS farmer_name,
         d.fullName AS distributor_name,
         o.created_at,
@@ -204,6 +216,52 @@ export const updateOrderStatus = async (req, res) => {
       "UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
       [requestedStatus, req.params.id]
     );
+    if (requestedStatus === "completed" && order.contractId) {
+      await connection.query(
+        `
+        UPDATE procurement_contracts
+        SET deliveriesCompleted = deliveriesCompleted + 1,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        `,
+        [order.contractId]
+      );
+      const [[remainingOrders]] = await connection.query(
+        `
+        SELECT COUNT(*) AS count
+        FROM orders
+        WHERE contractId = ? AND status IN ('pending', 'accepted') AND id != ?
+        `,
+        [order.contractId, order.id]
+      );
+      const [[contractSchedule]] = await connection.query(
+        "SELECT nextDeliveryDate FROM procurement_contracts WHERE id = ?",
+        [order.contractId]
+      );
+      if (
+        Number(remainingOrders.count) === 0 &&
+        !contractSchedule.nextDeliveryDate
+      ) {
+        await connection.query(
+          `
+          UPDATE procurement_contracts
+          SET status = 'completed', updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+          `,
+          [order.contractId]
+        );
+      }
+    }
+    if (requestedStatus === "rejected" && order.contractId) {
+      await connection.query(
+        `
+        UPDATE procurement_contracts
+        SET status = 'paused', updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND status = 'active'
+        `,
+        [order.contractId]
+      );
+    }
     await createNotification(connection, {
       userId: order.distributorId,
       type: `order_${requestedStatus}`,

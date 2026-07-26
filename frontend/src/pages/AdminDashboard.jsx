@@ -102,7 +102,7 @@ export default function AdminDashboard() {
     );
 
   const deleteUser = (id) => {
-    if (!window.confirm("Delete this user and all related records permanently?")) {
+    if (!window.confirm("Delete this user only if no business history exists?")) {
       return;
     }
     runAction(
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
       <div className="admin-container">
         <section className="admin-hero">
           <div>
-            <p className="admin-badge">📊 Phase 1 Admin Control Panel</p>
+            <p className="admin-badge">📊 Phase 5 Admin Control Panel</p>
             <h1>
               AgroConnect <span>Business Operations</span>
             </h1>
@@ -150,6 +150,20 @@ export default function AdminDashboard() {
               <div className="admin-stat-card pending-stat"><span>{stats.pendingVerifications || 0}</span><p>Pending KYC</p></div>
               <div className="admin-stat-card"><span>{stats.openDemands || 0}</span><p>Open Demands</p></div>
               <div className="admin-stat-card"><span>{stats.activeQuotations || 0}</span><p>Active Quotes</p></div>
+              <div className="admin-stat-card"><span>{stats.activeFpos || 0}</span><p>Active FPOs</p></div>
+              <div className="admin-stat-card"><span>{stats.activeContracts || 0}</span><p>Contracts</p></div>
+              <div className="admin-stat-card pending-stat"><span>{stats.pendingWarehouseBookings || 0}</span><p>Storage Requests</p></div>
+              <div className="admin-stat-card"><span>{stats.activeEquipment || 0}</span><p>Active Equipment</p></div>
+              <div className="admin-stat-card pending-stat"><span>{stats.pendingInputOrders || 0}</span><p>Input Orders</p></div>
+              <div className="admin-stat-card"><span>{stats.activePriceAlerts || 0}</span><p>Price Alerts</p></div>
+              <div className="admin-stat-card pending-stat"><span>{stats.pendingCollectionBookings || 0}</span><p>Collection Requests</p></div>
+              <div className="admin-stat-card pending-stat"><span>{stats.pendingPayments || 0}</span><p>Payment Reviews</p></div>
+              <div className="admin-stat-card"><span>{stats.activeSubscriptions || 0}</span><p>Subscriptions</p></div>
+              <div className="admin-stat-card pending-stat"><span>{stats.pendingSubscriptions || 0}</span><p>Plan Reviews</p></div>
+              <div className="admin-stat-card"><span>{stats.activeShipments || 0}</span><p>Active Shipments</p></div>
+              <div className="admin-stat-card pending-stat"><span>{stats.pendingInspections || 0}</span><p>Quality Checks</p></div>
+              <div className="admin-stat-card pending-stat"><span>{stats.openDisputes || 0}</span><p>Open Disputes</p></div>
+              <div className="admin-stat-card"><span>{stats.averageRating || 0} ★</span><p>Platform Rating</p></div>
             </section>
 
             <section className="premium-admin-section">
@@ -174,7 +188,6 @@ export default function AdminDashboard() {
                         <tr key={item.id}>
                           <td><strong>{item.name}</strong><small className="admin-cell-note">{item.email}</small></td>
                           <td>{item.role}<small className="admin-cell-note">{item.business_name || "Business name not added"}</small></td>
-                          <td>{String(item.document_type || "").replaceAll("_", " ")}</td>
                           <td><VerificationBadge status={item.verification_status} /></td>
                           <td>
                             <div className="table-actions phase-one-actions">

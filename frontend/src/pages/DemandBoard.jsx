@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../router";
 import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -14,6 +14,10 @@ const emptyDemand = {
   delivery_state: "Bihar",
   needed_by: "",
   description: "",
+  procurement_type: "spot",
+  institution_name: "",
+  delivery_frequency: "one_time",
+  contract_months: 1,
 };
 
 const normalizeCropName = (value) =>
@@ -290,6 +294,81 @@ export default function DemandBoard() {
                   required
                 />
               </div>
+              <div>
+                <label>Procurement Type</label>
+                <select
+                  value={demandForm.procurement_type}
+                  onChange={(e) => {
+                    const type = e.target.value;
+                    setDemandForm({
+                      ...demandForm,
+                      procurement_type: type,
+                      delivery_frequency:
+                        type === "recurring"
+                          ? demandForm.delivery_frequency === "one_time"
+                            ? "monthly"
+                            : demandForm.delivery_frequency
+                          : "one_time",
+                    });
+                  }}
+                >
+                  <option value="spot">Spot Purchase</option>
+                  <option value="institutional">Institutional Purchase</option>
+                  <option value="recurring">Recurring Contract</option>
+                </select>
+              </div>
+              {demandForm.procurement_type !== "spot" && (
+                <div>
+                  <label>Institution / Business Name</label>
+                  <input
+                    value={demandForm.institution_name}
+                    onChange={(e) =>
+                      setDemandForm({
+                        ...demandForm,
+                        institution_name: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+              )}
+              {demandForm.procurement_type === "recurring" && (
+                <>
+                  <div>
+                    <label>Delivery Frequency</label>
+                    <select
+                      value={demandForm.delivery_frequency}
+                      onChange={(e) =>
+                        setDemandForm({
+                          ...demandForm,
+                          delivery_frequency: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="weekly">Weekly</option>
+                      <option value="biweekly">Every 2 Weeks</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Contract Duration (Months)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="24"
+                      step="1"
+                      value={demandForm.contract_months}
+                      onChange={(e) =>
+                        setDemandForm({
+                          ...demandForm,
+                          contract_months: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                </>
+              )}
               <div className="full-width">
                 <label>Requirement Details</label>
                 <textarea
@@ -345,6 +424,11 @@ export default function DemandBoard() {
                 <div className="demand-card-head">
                   <div>
                     <span className="badge">{demand.category}</span>
+                    {demand.procurement_type !== "spot" && (
+                      <span className="badge phase-three-badge">
+                        {demand.procurement_type}
+                      </span>
+                    )}
                     <h2>{demand.crop_name}</h2>
                   </div>
                   <span className={`deal-status ${demand.status}`}>{demand.status}</span>
@@ -356,6 +440,14 @@ export default function DemandBoard() {
                   <div><span>Required by</span><strong>{String(demand.needed_by).slice(0, 10)}</strong></div>
                 </div>
                 <p className="demand-location">📍 {demand.delivery_location}</p>
+                {demand.institution_name && (
+                  <p className="demand-institution">
+                    🏛️ {demand.institution_name}
+                    {demand.procurement_type === "recurring"
+                      ? ` · ${demand.delivery_frequency} for ${demand.contract_months} months`
+                      : ""}
+                  </p>
+                )}
                 <p className="demand-description">{demand.description || "No additional details."}</p>
                 <div className="demand-card-footer">
                   <div>

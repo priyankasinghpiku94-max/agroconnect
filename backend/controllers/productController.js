@@ -5,6 +5,7 @@ import {
   saveProductImage,
   toPublicImageUrl,
 } from "../middleware/uploadMiddleware.js";
+import { recordMarketPriceAndNotify } from "../utils/marketIntelligence.js";
 
 const categories = new Set([
   "Vegetables",
@@ -237,6 +238,16 @@ export const createProduct = async (req, res) => {
       ]
     );
 
+    await recordMarketPriceAndNotify(db, {
+      id: result.insertId,
+      cropName: String(req.body.crop_name).trim(),
+      category: String(req.body.category),
+      city,
+      state,
+      unit: String(req.body.unit),
+      price: Number(req.body.price_per_unit),
+    });
+
     res.status(201).json({
       success: true,
       message: "Product added successfully",
@@ -305,6 +316,21 @@ export const updateProduct = async (req, res) => {
       req.body.min_order_quantity === undefined
         ? Number(current.minOrderQuantity)
         : Number(req.body.min_order_quantity);
+    const [[reservations]] = await db.query(
+      `
+      SELECT COALESCE(SUM(quantity), 0) AS reserved
+      FROM orders
+      WHERE productId = ? AND status IN ('pending', 'accepted')
+      `,
+      [req.params.id]
+    );
+    if (nextQuantity < Number(reservations.reserved || 0)) {
+      if (req.file) await deleteProductImage(getProductImagePath(req.file.filename));
+      return res.status(409).json({
+        success: false,
+        message: `Stock cannot be lower than ${reservations.reserved} units reserved by active orders`,
+      });
+    }
     if (nextQuantity > 0 && nextMinimum > nextQuantity) {
       if (req.file) await deleteProductImage(getProductImagePath(req.file.filename));
       return res.status(400).json({
@@ -379,6 +405,16 @@ export const updateProduct = async (req, res) => {
         req.user.id,
       ]
     );
+
+    await recordMarketPriceAndNotify(db, {
+      id: Number(req.params.id),
+      cropName: String(req.body.crop_name ?? current.productName).trim(),
+      category: String(req.body.category ?? current.category),
+      city: parsedLocation.city,
+      state: parsedLocation.state,
+      unit: String(req.body.unit ?? current.unit),
+      price: Number(req.body.price_per_unit ?? current.price),
+    });
 
     if (current.image !== image) {
       await deleteProductImage(current.image, current.imagePublicId);

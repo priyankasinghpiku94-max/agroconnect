@@ -25,6 +25,10 @@ import EquipmentRental from "./pages/EquipmentRental";
 import AgriInputs from "./pages/AgriInputs";
 import SmartMarket from "./pages/SmartMarket";
 import CollectionCentres from "./pages/CollectionCentres";
+import LaunchHub from "./pages/LaunchHub";
+import FinanceCenter from "./pages/FinanceCenter";
+import FulfilmentCenter from "./pages/FulfilmentCenter";
+import TrustCenter from "./pages/TrustCenter";
 
 export default function App() {
   return (
@@ -205,6 +209,42 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/launch"
+          element={
+            <ProtectedRoute>
+              <LaunchHub />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/launch/finance"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor", "admin"]}>
+              <FinanceCenter />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/launch/fulfilment"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor", "admin"]}>
+              <FulfilmentCenter />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/launch/trust"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor", "admin"]}>
+              <TrustCenter />
             </ProtectedRoute>
           }
         />

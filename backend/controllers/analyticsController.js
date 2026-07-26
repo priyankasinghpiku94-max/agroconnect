@@ -36,13 +36,15 @@ export const getAnalyticsOverview = async (req, res) => {
           ) AS inventory_value,
           (SELECT COUNT(*) FROM orders WHERE farmerId = ?) AS orders,
           (
-            SELECT COALESCE(SUM(
-              quantity * COALESCE(agreedPrice, p.price)
-            ), 0)
-            FROM orders o
-            INNER JOIN products p ON o.productId = p.id
-            WHERE o.farmerId = ? AND o.status = 'completed'
-          ) AS completed_revenue,
+            (
+  SELECT COALESCE(
+    SUM(o.quantity * COALESCE(o.agreedPrice, p.price)),
+    0
+  )
+  FROM orders o
+  INNER JOIN products p ON o.productId = p.id
+  WHERE o.farmerId = ? AND o.status = 'completed'
+) AS completed_revenue,
           (SELECT COUNT(*) FROM quotations WHERE farmerId = ?) AS quotations,
           (
             SELECT COUNT(*) FROM quotations

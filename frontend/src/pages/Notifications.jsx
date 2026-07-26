@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../router";
 import api from "../api/api";
 
 export default function Notifications() {
@@ -30,6 +30,17 @@ export default function Notifications() {
     if (item.related_type === "quotation") return "/negotiations";
     if (item.related_type === "order") return "/orders";
     if (item.related_type === "demand") return "/demands";
+    if (item.related_type === "fpo") return "/business/fpo";
+    if (item.related_type === "contract") return "/business/contracts";
+    if (item.related_type === "warehouse") return "/business/warehouses";
+    if (item.related_type === "equipment_booking") return "/expansion/equipment";
+    if (item.related_type === "input_order") return "/expansion/inputs";
+    if (item.related_type === "collection_booking") return "/expansion/collection-centres";
+    if (["payment", "subscription"].includes(item.related_type)) return "/launch/finance";
+    if (["shipment", "inspection"].includes(item.related_type)) return "/launch/fulfilment";
+    if (["review", "dispute"].includes(item.related_type)) return "/launch/trust";
+    if (item.related_type === "product" && item.type === "price_alert")
+      return "/expansion/smart-market";
     return "/dashboard";
   };
 
@@ -58,7 +69,7 @@ export default function Notifications() {
           <div>
             <p className="phase-two-badge">🔔 Activity Center</p>
             <h1>Business <span>Notifications</span></h1>
-            <p>Stay updated on quotations, counter-offers, demand decisions and orders.</p>
+            <p>Stay updated on deals, payments, delivery, inspections and support cases.</p>
           </div>
           {unread > 0 && <button className="btn secondary" onClick={markAllRead}>Mark all read ({unread})</button>}
         </section>

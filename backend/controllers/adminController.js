@@ -25,6 +25,48 @@ export const getStats = async (req, res) => {
     const [[activeQuotations]] = await db.query(
       "SELECT COUNT(*) AS count FROM quotations WHERE status IN ('submitted', 'countered')"
     );
+    const [[activeFpos]] = await db.query(
+      "SELECT COUNT(*) AS count FROM fpos WHERE status = 'active'"
+    );
+    const [[activeContracts]] = await db.query(
+      "SELECT COUNT(*) AS count FROM procurement_contracts WHERE status = 'active'"
+    );
+    const [[pendingWarehouseBookings]] = await db.query(
+      "SELECT COUNT(*) AS count FROM warehouse_bookings WHERE status = 'requested'"
+    );
+    const [[activeEquipment]] = await db.query(
+      "SELECT COUNT(*) AS count FROM equipment_listings WHERE status = 'active'"
+    );
+    const [[pendingInputOrders]] = await db.query(
+      "SELECT COUNT(*) AS count FROM input_orders WHERE status = 'pending'"
+    );
+    const [[activePriceAlerts]] = await db.query(
+      "SELECT COUNT(*) AS count FROM price_alerts WHERE isActive = 1"
+    );
+    const [[pendingCollectionBookings]] = await db.query(
+      "SELECT COUNT(*) AS count FROM collection_bookings WHERE status = 'requested'"
+    );
+    const [[pendingPayments]] = await db.query(
+      "SELECT COUNT(*) AS count FROM payment_records WHERE status = 'submitted'"
+    );
+    const [[activeSubscriptions]] = await db.query(
+      "SELECT COUNT(*) AS count FROM user_subscriptions WHERE status = 'active' AND endsAt >= CURRENT_DATE"
+    );
+    const [[pendingSubscriptions]] = await db.query(
+      "SELECT COUNT(*) AS count FROM user_subscriptions WHERE status = 'pending'"
+    );
+    const [[activeShipments]] = await db.query(
+      "SELECT COUNT(*) AS count FROM shipments WHERE status NOT IN ('delivered', 'cancelled')"
+    );
+    const [[pendingInspections]] = await db.query(
+      "SELECT COUNT(*) AS count FROM quality_inspections WHERE status IN ('requested', 'scheduled')"
+    );
+    const [[openDisputes]] = await db.query(
+      "SELECT COUNT(*) AS count FROM disputes WHERE status IN ('open', 'under_review')"
+    );
+    const [[averageRating]] = await db.query(
+      "SELECT COALESCE(ROUND(AVG(rating), 2), 0) AS value FROM reviews WHERE isVisible = 1"
+    );
 
     res.json({
       success: true,
@@ -37,6 +79,20 @@ export const getStats = async (req, res) => {
         pendingVerifications: pendingVerifications.count,
         openDemands: openDemands.count,
         activeQuotations: activeQuotations.count,
+        activeFpos: activeFpos.count,
+        activeContracts: activeContracts.count,
+        pendingWarehouseBookings: pendingWarehouseBookings.count,
+        activeEquipment: activeEquipment.count,
+        pendingInputOrders: pendingInputOrders.count,
+        activePriceAlerts: activePriceAlerts.count,
+        pendingCollectionBookings: pendingCollectionBookings.count,
+        pendingPayments: pendingPayments.count,
+        activeSubscriptions: activeSubscriptions.count,
+        pendingSubscriptions: pendingSubscriptions.count,
+        activeShipments: activeShipments.count,
+        pendingInspections: pendingInspections.count,
+        openDisputes: openDisputes.count,
+        averageRating: averageRating.value,
       },
     });
   } catch (error) {
@@ -126,7 +182,11 @@ export const getAdminOrders = async (req, res) => {
         d.fullName AS distributor_name,
         (CAST(o.quantity AS DECIMAL(12,2)) * COALESCE(o.agreedPrice, p.price))
           AS total_price,
-        CASE WHEN o.quotationId IS NULL THEN 'direct' ELSE 'demand' END AS source,
+        CASE
+          WHEN o.contractId IS NOT NULL THEN 'contract'
+          WHEN o.quotationId IS NOT NULL THEN 'demand'
+          ELSE 'direct'
+        END AS source,
         o.status
       FROM orders o
       LEFT JOIN products p ON o.productId = p.id
@@ -157,6 +217,63 @@ export const deleteUser = async (req, res) => {
       "SELECT kycDocumentPath FROM users WHERE id = ? AND role != 'admin'",
       [id]
     );
+    if (!users.length) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found or protected",
+      });
+    }
+    const [[history]] = await db.query(
+      `
+      SELECT
+        (SELECT COUNT(*) FROM orders
+          WHERE farmerId = ? OR distributorId = ?) AS orders_count,
+        (SELECT COUNT(*) FROM demands WHERE distributorId = ?) AS demands_count,
+        (SELECT COUNT(*) FROM fpos WHERE ownerId = ?) AS fpos_count,
+        (SELECT COUNT(*) FROM procurement_contracts
+          WHERE farmerId = ? OR distributorId = ?) AS contracts_count,
+        (SELECT COUNT(*) FROM warehouse_bookings WHERE userId = ?)
+          AS bookings_count,
+        (SELECT COUNT(*) FROM equipment_listings WHERE ownerId = ?)
+          AS equipment_count,
+        (SELECT COUNT(*) FROM equipment_bookings
+          WHERE renterId = ? OR ownerId = ?) AS equipment_bookings_count,
+        (SELECT COUNT(*) FROM agri_inputs WHERE sellerId = ?)
+          AS input_listings_count,
+        (SELECT COUNT(*) FROM input_orders
+          WHERE buyerId = ? OR sellerId = ?) AS input_orders_count,
+        (SELECT COUNT(*) FROM collection_bookings WHERE userId = ?)
+          AS collection_bookings_count,
+        (SELECT COUNT(*) FROM user_subscriptions WHERE distributorId = ?)
+          AS subscriptions_count,
+        (SELECT COUNT(*) FROM invoices WHERE sellerId = ? OR buyerId = ?)
+          AS invoices_count,
+        (SELECT COUNT(*) FROM payment_records WHERE payerId = ? OR payeeId = ?)
+          AS payments_count,
+        (SELECT COUNT(*) FROM shipments WHERE farmerId = ? OR distributorId = ?)
+          AS shipments_count,
+        (SELECT COUNT(*) FROM quality_inspections
+          WHERE requestedBy = ? OR farmerId = ? OR distributorId = ?)
+          AS inspections_count,
+        (SELECT COUNT(*) FROM reviews WHERE reviewerId = ? OR reviewedUserId = ?)
+          AS reviews_count,
+        (SELECT COUNT(*) FROM disputes
+          WHERE openedBy = ? OR againstUserId = ?) AS disputes_count
+      `,
+      [
+        id, id, id, id, id, id, id, id, id, id, id, id, id, id,
+        id, id, id, id, id, id, id, id, id, id, id, id, id, id,
+      ]
+    );
+    if (
+      Object.values(history).some((value) => Number(value) > 0)
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "This account has business records and cannot be deleted. Deactivate it instead.",
+      });
+    }
     const [result] = await db.query(
       "DELETE FROM users WHERE id = ? AND role != 'admin'",
       [id]
