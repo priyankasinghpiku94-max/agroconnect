@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route } from "./router";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
@@ -15,6 +15,11 @@ import Profile from "./pages/Profile";
 import DemandBoard from "./pages/DemandBoard";
 import Negotiations from "./pages/Negotiations";
 import Notifications from "./pages/Notifications";
+import BusinessHub from "./pages/BusinessHub";
+import FpoWorkspace from "./pages/FpoWorkspace";
+import ProcurementContracts from "./pages/ProcurementContracts";
+import Warehouses from "./pages/Warehouses";
+import BusinessAnalytics from "./pages/BusinessAnalytics";
 
 export default function App() {
   return (
@@ -96,6 +101,51 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Notifications />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/business"
+          element={
+            <ProtectedRoute>
+              <BusinessHub />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/business/fpo"
+          element={
+            <ProtectedRoute roles={["farmer"]}>
+              <FpoWorkspace />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/business/contracts"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor", "admin"]}>
+              <ProcurementContracts />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/business/warehouses"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor", "admin"]}>
+              <Warehouses />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/business/analytics"
+          element={
+            <ProtectedRoute>
+              <BusinessAnalytics />
             </ProtectedRoute>
           }
         />
