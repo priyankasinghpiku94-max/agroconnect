@@ -20,6 +20,11 @@ import FpoWorkspace from "./pages/FpoWorkspace";
 import ProcurementContracts from "./pages/ProcurementContracts";
 import Warehouses from "./pages/Warehouses";
 import BusinessAnalytics from "./pages/BusinessAnalytics";
+import ExpansionHub from "./pages/ExpansionHub";
+import EquipmentRental from "./pages/EquipmentRental";
+import AgriInputs from "./pages/AgriInputs";
+import SmartMarket from "./pages/SmartMarket";
+import CollectionCentres from "./pages/CollectionCentres";
 
 export default function App() {
   return (
@@ -146,6 +151,51 @@ export default function App() {
           element={
             <ProtectedRoute>
               <BusinessAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/expansion"
+          element={
+            <ProtectedRoute>
+              <ExpansionHub />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/expansion/equipment"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor", "admin"]}>
+              <EquipmentRental />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/expansion/inputs"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor", "admin"]}>
+              <AgriInputs />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/expansion/smart-market"
+          element={
+            <ProtectedRoute>
+              <SmartMarket />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/expansion/collection-centres"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor", "admin"]}>
+              <CollectionCentres />
             </ProtectedRoute>
           }
         />

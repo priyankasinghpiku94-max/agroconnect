@@ -17,6 +17,10 @@ import fpoRoutes from "./routes/fpoRoutes.js";
 import contractRoutes from "./routes/contractRoutes.js";
 import warehouseRoutes from "./routes/warehouseRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
+import equipmentRoutes from "./routes/equipmentRoutes.js";
+import inputRoutes from "./routes/inputRoutes.js";
+import intelligenceRoutes from "./routes/intelligenceRoutes.js";
+import collectionRoutes from "./routes/collectionRoutes.js";
 import { productUploadDir } from "./middleware/uploadMiddleware.js";
 
 dotenv.config();
@@ -87,6 +91,10 @@ app.use("/api/fpos", fpoRoutes);
 app.use("/api/contracts", contractRoutes);
 app.use("/api/warehouses", warehouseRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/equipment", equipmentRoutes);
+app.use("/api/inputs", inputRoutes);
+app.use("/api/intelligence", intelligenceRoutes);
+app.use("/api/collection-centres", collectionRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: "API route not found" });
