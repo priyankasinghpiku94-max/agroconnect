@@ -75,13 +75,17 @@ export const getAnalyticsOverview = async (req, res) => {
           ) AS open_demands,
           (SELECT COUNT(*) FROM orders WHERE distributorId = ?) AS orders,
           (
-            SELECT COALESCE(SUM(
-              quantity * COALESCE(agreedPrice, p.price)
-            ), 0)
-            FROM orders o
-            INNER JOIN products p ON o.productId = p.id
-            WHERE o.distributorId = ? AND o.status = 'completed'
-          ) AS completed_spend,
+    SELECT COALESCE(
+        SUM(
+            o.quantity * COALESCE(o.agreedPrice, p.price)
+        ),
+        0
+    )
+    FROM orders o
+    INNER JOIN products p
+        ON o.productId = p.id
+    WHERE o.status = 'completed'
+) AS completed_gmv,
           (
             SELECT COUNT(*) FROM quotations
             WHERE distributorId = ? AND status IN ('submitted', 'countered')
