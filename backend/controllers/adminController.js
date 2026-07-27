@@ -67,6 +67,18 @@ export const getStats = async (req, res) => {
     const [[averageRating]] = await db.query(
       "SELECT COALESCE(ROUND(AVG(rating), 2), 0) AS value FROM reviews WHERE isVisible = 1"
     );
+    const [[activeConversations]] = await db.query(
+      "SELECT COUNT(*) AS count FROM conversations WHERE status = 'active'"
+    );
+    const [[unreadMessages]] = await db.query(
+      "SELECT COUNT(*) AS count FROM conversation_messages WHERE isRead = 0"
+    );
+    const [[queuedNotifications]] = await db.query(
+      "SELECT COUNT(*) AS count FROM notification_outbox WHERE status = 'queued'"
+    );
+    const [[todayAdvisories]] = await db.query(
+      "SELECT COUNT(*) AS count FROM weather_advisories WHERE created_at >= CURRENT_DATE"
+    );
 
     res.json({
       success: true,
@@ -93,6 +105,10 @@ export const getStats = async (req, res) => {
         pendingInspections: pendingInspections.count,
         openDisputes: openDisputes.count,
         averageRating: averageRating.value,
+        activeConversations: activeConversations.count,
+        unreadMessages: unreadMessages.count,
+        queuedNotifications: queuedNotifications.count,
+        todayAdvisories: todayAdvisories.count,
       },
     });
   } catch (error) {
@@ -258,11 +274,14 @@ export const deleteUser = async (req, res) => {
         (SELECT COUNT(*) FROM reviews WHERE reviewerId = ? OR reviewedUserId = ?)
           AS reviews_count,
         (SELECT COUNT(*) FROM disputes
-          WHERE openedBy = ? OR againstUserId = ?) AS disputes_count
+          WHERE openedBy = ? OR againstUserId = ?) AS disputes_count,
+        (SELECT COUNT(*) FROM conversations
+          WHERE farmerId = ? OR distributorId = ?) AS conversations_count
       `,
       [
         id, id, id, id, id, id, id, id, id, id, id, id, id, id,
         id, id, id, id, id, id, id, id, id, id, id, id, id, id,
+        id, id,
       ]
     );
     if (

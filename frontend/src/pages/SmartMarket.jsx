@@ -112,6 +112,9 @@ export default function SmartMarket() {
       [["order", "ऑर्डर"], "/orders"],
       [["demand", "मांग"], "/demands"],
       [["analytics", "रिपोर्ट", "एनालिटिक्स"], "/business/analytics"],
+      [["chat", "message", "बात", "संदेश"], "/connect/messages"],
+      [["weather", "मौसम"], "/connect/advisory"],
+      [["notification", "सूचना"], "/connect/preferences"],
     ];
     const route = routes.find(([keywords]) =>
       keywords.some((keyword) => command.includes(keyword))

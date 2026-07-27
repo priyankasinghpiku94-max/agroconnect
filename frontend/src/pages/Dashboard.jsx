@@ -127,6 +127,12 @@ export default function Dashboard() {
               <p>Invoices, delivery tracking, inspections, reviews and disputes.</p>
               <Link className="btn dashboard-btn" to="/launch">Open Launch Hub</Link>
             </div>
+            <div className="dashboard-action-card phase-six-dashboard-card">
+              <div className="action-icon">🌦️</div>
+              <h3>Phase 6 Connect</h3>
+              <p>Order chat, live weather advisory and notification controls.</p>
+              <Link className="btn dashboard-btn" to="/connect">Open Connect Hub</Link>
+            </div>
           </section>
         )}
 
@@ -199,6 +205,12 @@ export default function Dashboard() {
               <p>Payments, subscriptions, shipment tracking and business trust.</p>
               <Link className="btn dashboard-btn" to="/launch">Open Launch Hub</Link>
             </div>
+            <div className="dashboard-action-card phase-six-dashboard-card">
+              <div className="action-icon">💬</div>
+              <h3>Phase 6 Connect</h3>
+              <p>Talk to farmers, check weather signals and control alerts.</p>
+              <Link className="btn dashboard-btn" to="/connect">Open Connect Hub</Link>
+            </div>
           </section>
         )}
 
@@ -232,6 +244,12 @@ export default function Dashboard() {
               <h3>Phase 5 Operations</h3>
               <p>Verify payments, control fulfilment and resolve disputes.</p>
               <Link className="btn dashboard-btn" to="/launch">Open Phase 5</Link>
+            </div>
+            <div className="dashboard-action-card phase-six-dashboard-card">
+              <div className="action-icon">🔔</div>
+              <h3>Phase 6 Operations</h3>
+              <p>Monitor advisory use and external notification delivery queues.</p>
+              <Link className="btn dashboard-btn" to="/connect">Open Phase 6</Link>
             </div>
           </section>
         )}

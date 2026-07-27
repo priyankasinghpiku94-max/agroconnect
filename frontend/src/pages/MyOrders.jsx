@@ -126,6 +126,8 @@ export default function MyOrders() {
                               Order #{order.id} ·{" "}
                               {order.source === "demand"
                                 ? "Demand quotation"
+                                : order.source === "contract"
+                                  ? "Recurring contract"
                                 : "Direct marketplace"}
                             </p>
                           </div>

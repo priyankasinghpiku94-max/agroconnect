@@ -29,6 +29,10 @@ import LaunchHub from "./pages/LaunchHub";
 import FinanceCenter from "./pages/FinanceCenter";
 import FulfilmentCenter from "./pages/FulfilmentCenter";
 import TrustCenter from "./pages/TrustCenter";
+import CommunicationHub from "./pages/CommunicationHub";
+import BusinessMessages from "./pages/BusinessMessages";
+import WeatherAdvisory from "./pages/WeatherAdvisory";
+import NotificationPreferences from "./pages/NotificationPreferences";
 
 export default function App() {
   return (
@@ -245,6 +249,42 @@ export default function App() {
           element={
             <ProtectedRoute roles={["farmer", "distributor", "admin"]}>
               <TrustCenter />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/connect"
+          element={
+            <ProtectedRoute>
+              <CommunicationHub />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/connect/messages"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor"]}>
+              <BusinessMessages />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/connect/advisory"
+          element={
+            <ProtectedRoute>
+              <WeatherAdvisory />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/connect/preferences"
+          element={
+            <ProtectedRoute>
+              <NotificationPreferences />
             </ProtectedRoute>
           }
         />

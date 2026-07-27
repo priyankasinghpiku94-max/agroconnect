@@ -39,6 +39,8 @@ export default function Notifications() {
     if (["payment", "subscription"].includes(item.related_type)) return "/launch/finance";
     if (["shipment", "inspection"].includes(item.related_type)) return "/launch/fulfilment";
     if (["review", "dispute"].includes(item.related_type)) return "/launch/trust";
+    if (item.related_type === "conversation") return "/connect/messages";
+    if (item.related_type === "weather") return "/connect/advisory";
     if (item.related_type === "product" && item.type === "price_alert")
       return "/expansion/smart-market";
     return "/dashboard";
@@ -69,7 +71,7 @@ export default function Notifications() {
           <div>
             <p className="phase-two-badge">🔔 Activity Center</p>
             <h1>Business <span>Notifications</span></h1>
-            <p>Stay updated on deals, payments, delivery, inspections and support cases.</p>
+            <p>Stay updated on deals, payments, delivery, inspections, chat and advisories.</p>
           </div>
           {unread > 0 && <button className="btn secondary" onClick={markAllRead}>Mark all read ({unread})</button>}
         </section>

@@ -65,6 +65,15 @@ export default function LaunchHub() {
           <div><strong>Auditable</strong><span>Status history and references</span></div>
           <div><strong>Gateway-ready</strong><span>Manual verification for now</span></div>
         </section>
+
+        <section className="phase-six-bridge">
+          <div>
+            <p>Phase 6 Communication</p>
+            <h2>Keep users connected after the transaction.</h2>
+            <span>Secure chat, live weather guidance and channel preferences.</span>
+          </div>
+          <Link className="btn" to="/connect">Open Phase 6</Link>
+        </section>
       </div>
     </main>
   );

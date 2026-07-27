@@ -117,7 +117,7 @@ export default function AdminDashboard() {
       <div className="admin-container">
         <section className="admin-hero">
           <div>
-            <p className="admin-badge">📊 Phase 5 Admin Control Panel</p>
+            <p className="admin-badge">📊 Phase 6 Admin Control Panel</p>
             <h1>
               AgroConnect <span>Business Operations</span>
             </h1>
@@ -164,6 +164,10 @@ export default function AdminDashboard() {
               <div className="admin-stat-card pending-stat"><span>{stats.pendingInspections || 0}</span><p>Quality Checks</p></div>
               <div className="admin-stat-card pending-stat"><span>{stats.openDisputes || 0}</span><p>Open Disputes</p></div>
               <div className="admin-stat-card"><span>{stats.averageRating || 0} ★</span><p>Platform Rating</p></div>
+              <div className="admin-stat-card"><span>{stats.activeConversations || 0}</span><p>Business Chats</p></div>
+              <div className="admin-stat-card pending-stat"><span>{stats.unreadMessages || 0}</span><p>Unread Messages</p></div>
+              <div className="admin-stat-card pending-stat"><span>{stats.queuedNotifications || 0}</span><p>Queued Delivery</p></div>
+              <div className="admin-stat-card"><span>{stats.todayAdvisories || 0}</span><p>Today Advisories</p></div>
             </section>
 
             <section className="premium-admin-section">

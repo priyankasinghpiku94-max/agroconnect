@@ -24,6 +24,9 @@ import collectionRoutes from "./routes/collectionRoutes.js";
 import financeRoutes from "./routes/financeRoutes.js";
 import fulfilmentRoutes from "./routes/fulfilmentRoutes.js";
 import trustRoutes from "./routes/trustRoutes.js";
+import communicationRoutes from "./routes/communicationRoutes.js";
+import advisoryRoutes from "./routes/advisoryRoutes.js";
+import preferenceRoutes from "./routes/preferenceRoutes.js";
 import { productUploadDir } from "./middleware/uploadMiddleware.js";
 
 dotenv.config();
@@ -101,6 +104,9 @@ app.use("/api/collection-centres", collectionRoutes);
 app.use("/api/finance", financeRoutes);
 app.use("/api/fulfilment", fulfilmentRoutes);
 app.use("/api/trust", trustRoutes);
+app.use("/api/communication", communicationRoutes);
+app.use("/api/advisory", advisoryRoutes);
+app.use("/api/preferences", preferenceRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: "API route not found" });

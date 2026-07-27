@@ -1,4 +1,4 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "../router";
 import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
@@ -47,6 +47,10 @@ export default function Navbar() {
               )}
 
               {user.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
+              <NavLink to="/business">Business Hub</NavLink>
+              <NavLink to="/expansion">Expansion</NavLink>
+              <NavLink to="/launch">Phase 5</NavLink>
+              <NavLink to="/connect">Phase 6</NavLink>
               <NavLink to="/notifications">Notifications</NavLink>
               {user.role !== "admin" && <NavLink to="/profile">Profile</NavLink>}
 
