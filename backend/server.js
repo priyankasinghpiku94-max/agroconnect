@@ -47,6 +47,9 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 
 const app = express();
 
+/*
+  Required when deployed behind Render / reverse proxy.
+*/
 if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 1);
 }
@@ -55,43 +58,74 @@ if (process.env.NODE_ENV === "production") {
    CORS
 ========================================================= */
 
+/*
+  Production frontend:
+  https://agroconnect-rouge.vercel.app
+
+  Other existing frontend domains are also kept.
+*/
+
 const allowedOrigins = [
+  // Local development
   "http://localhost:3000",
   "http://localhost:5173",
 
-  // Main Vercel production domain
+  // Main production Vercel domain
+  "https://agroconnect-rouge.vercel.app",
+
+  // Existing Vercel production domain
   "https://agroconnect-skas.vercel.app",
 
-  // Current Vercel deployment domain
+  // Existing Vercel deployment domain
   "https://agroconnect-kaso5jlv-skas.vercel.app",
 
-  // Environment variable can contain comma-separated URLs
+  // Environment variable URLs
   ...(process.env.CLIENT_URL
     ? process.env.CLIENT_URL
         .split(",")
-        .map((origin) => origin.trim())
+        .map((origin) => origin.trim().replace(/\/$/, ""))
         .filter(Boolean)
     : []),
 ];
 
-console.log("Allowed CORS origins:", allowedOrigins);
+console.log("==============================================");
+console.log("🌐 Allowed CORS Origins:");
+console.log(allowedOrigins);
+console.log("==============================================");
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests without Origin
-      // Example: Postman, server-to-server requests
+      /*
+        Requests like Postman/server-to-server may not
+        contain an Origin header.
+      */
       if (!origin) {
         return callback(null, true);
       }
 
-      if (allowedOrigins.includes(origin)) {
+      /*
+        Remove trailing slash if present.
+      */
+      const normalizedOrigin = origin.replace(/\/$/, "");
+
+      /*
+        Check allowed frontend origin.
+      */
+      if (allowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       }
 
-      console.error("❌ CORS blocked origin:", origin);
+      console.error(
+        "❌ CORS blocked origin:",
+        origin
+      );
 
-      return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+      return callback(
+        new Error(
+          `Origin not allowed by CORS: ${origin}`
+        )
+      );
     },
 
     credentials: true,
@@ -111,6 +145,8 @@ app.use(
       "X-Requested-With",
       "Accept",
     ],
+
+    optionsSuccessStatus: 204,
   })
 );
 
@@ -130,7 +166,11 @@ app.use(
    BODY PARSER
 ========================================================= */
 
-app.use(express.json({ limit: "1mb" }));
+app.use(
+  express.json({
+    limit: "1mb",
+  })
+);
 
 app.use(
   express.urlencoded({
@@ -158,9 +198,11 @@ app.use(
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
+
   limit: 40,
 
   standardHeaders: true,
+
   legacyHeaders: false,
 
   message: {
@@ -185,56 +227,193 @@ app.get("/", (req, res) => {
    API ROUTES
 ========================================================= */
 
-app.use("/api/auth", authLimiter, authRoutes);
+/*
+  AUTH
+*/
+app.use(
+  "/api/auth",
+  authLimiter,
+  authRoutes
+);
 
-app.use("/api/products", productRoutes);
+/*
+  PRODUCTS
+*/
+app.use(
+  "/api/products",
+  productRoutes
+);
 
-app.use("/api/orders", orderRoutes);
+/*
+  ORDERS
+*/
+app.use(
+  "/api/orders",
+  orderRoutes
+);
 
-app.use("/api/admin", adminRoutes);
+/*
+  ADMIN
+*/
+app.use(
+  "/api/admin",
+  adminRoutes
+);
 
-app.use("/api/verification", verificationRoutes);
+/*
+  VERIFICATION
+*/
+app.use(
+  "/api/verification",
+  verificationRoutes
+);
 
-app.use("/api/demands", demandRoutes);
+/*
+  DEMANDS
+*/
+app.use(
+  "/api/demands",
+  demandRoutes
+);
 
-app.use("/api/quotations", quotationRoutes);
+/*
+  QUOTATIONS
+*/
+app.use(
+  "/api/quotations",
+  quotationRoutes
+);
 
-app.use("/api/notifications", notificationRoutes);
+/*
+  NOTIFICATIONS
+*/
+app.use(
+  "/api/notifications",
+  notificationRoutes
+);
 
-app.use("/api/fpos", fpoRoutes);
+/*
+  FPO
+*/
+app.use(
+  "/api/fpos",
+  fpoRoutes
+);
 
-app.use("/api/contracts", contractRoutes);
+/*
+  CONTRACTS
+*/
+app.use(
+  "/api/contracts",
+  contractRoutes
+);
 
-app.use("/api/warehouses", warehouseRoutes);
+/*
+  WAREHOUSES
+*/
+app.use(
+  "/api/warehouses",
+  warehouseRoutes
+);
 
-app.use("/api/analytics", analyticsRoutes);
+/*
+  ANALYTICS
+*/
+app.use(
+  "/api/analytics",
+  analyticsRoutes
+);
 
-app.use("/api/equipment", equipmentRoutes);
+/*
+  EQUIPMENT
+*/
+app.use(
+  "/api/equipment",
+  equipmentRoutes
+);
 
-app.use("/api/inputs", inputRoutes);
+/*
+  INPUTS
+*/
+app.use(
+  "/api/inputs",
+  inputRoutes
+);
 
-app.use("/api/intelligence", intelligenceRoutes);
+/*
+  INTELLIGENCE
+*/
+app.use(
+  "/api/intelligence",
+  intelligenceRoutes
+);
 
-app.use("/api/collection-centres", collectionRoutes);
+/*
+  COLLECTION CENTRES
+*/
+app.use(
+  "/api/collection-centres",
+  collectionRoutes
+);
 
-app.use("/api/finance", financeRoutes);
+/*
+  FINANCE
+*/
+app.use(
+  "/api/finance",
+  financeRoutes
+);
 
-app.use("/api/fulfilment", fulfilmentRoutes);
+/*
+  FULFILMENT
+*/
+app.use(
+  "/api/fulfilment",
+  fulfilmentRoutes
+);
 
-app.use("/api/trust", trustRoutes);
+/*
+  TRUST
+*/
+app.use(
+  "/api/trust",
+  trustRoutes
+);
 
-app.use("/api/communication", communicationRoutes);
+/*
+  COMMUNICATION
+*/
+app.use(
+  "/api/communication",
+  communicationRoutes
+);
 
-app.use("/api/advisory", advisoryRoutes);
+/*
+  ADVISORY
+*/
+app.use(
+  "/api/advisory",
+  advisoryRoutes
+);
 
-app.use("/api/preferences", preferenceRoutes);
+/*
+  PREFERENCES
+*/
+app.use(
+  "/api/preferences",
+  preferenceRoutes
+);
 
 /* =========================================================
-   404
+   404 HANDLER
 ========================================================= */
 
 app.use((req, res) => {
-  console.log("404:", req.method, req.originalUrl);
+  console.log(
+    "404:",
+    req.method,
+    req.originalUrl
+  );
 
   res.status(404).json({
     success: false,
@@ -244,61 +423,108 @@ app.use((req, res) => {
 });
 
 /* =========================================================
-   ERROR HANDLER
+   GLOBAL ERROR HANDLER
 ========================================================= */
 
-app.use((error, req, res, next) => {
-  console.error("Unhandled request error:", error);
+app.use(
+  (error, req, res, next) => {
+    console.error(
+      "Unhandled request error:",
+      error
+    );
 
-  // CORS error
-  if (
-    String(error?.message || "")
-      .toLowerCase()
-      .includes("cors")
-    ||
-    String(error?.message || "")
-      .toLowerCase()
-      .includes("origin not allowed")
-  ) {
-    return res.status(403).json({
+    /* ---------------------------------------------
+       CORS ERROR
+    --------------------------------------------- */
+
+    const errorMessage = String(
+      error?.message || ""
+    ).toLowerCase();
+
+    if (
+      errorMessage.includes("cors") ||
+      errorMessage.includes("origin not allowed")
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "CORS blocked this request",
+      });
+    }
+
+    /* ---------------------------------------------
+       UPLOAD ERROR
+    --------------------------------------------- */
+
+    const isUploadError =
+      error?.name === "MulterError" ||
+      String(error?.message || "").includes(
+        "allowed"
+      );
+
+    /* ---------------------------------------------
+       RESPONSE
+    --------------------------------------------- */
+
+    return res.status(
+      isUploadError ? 400 : 500
+    ).json({
       success: false,
-      message: "CORS blocked this request",
+
+      message: isUploadError
+        ? error.message
+        : "Internal server error",
     });
   }
-
-  const isUploadError =
-    error?.name === "MulterError" ||
-    String(error?.message || "").includes("allowed");
-
-  return res.status(isUploadError ? 400 : 500).json({
-    success: false,
-    message: isUploadError
-      ? error.message
-      : "Internal server error",
-  });
-});
+);
 
 /* =========================================================
    SERVER
 ========================================================= */
 
-const PORT = process.env.PORT || 8000;
+const PORT =
+  process.env.PORT || 8000;
+
+/* =========================================================
+   START SERVER
+========================================================= */
 
 const startServer = async () => {
   try {
+    /*
+      Connect database first.
+    */
     await connectDB();
 
+    /*
+      Start Express server.
+    */
     app.listen(PORT, () => {
+      console.log(
+        "=============================================="
+      );
+
       console.log(
         `✅ AgroConnect backend running on port ${PORT}`
       );
 
       console.log(
-        `🌐 Backend URL: https://agroconnect-backend-9nvp.onrender.com`
+        "🌐 Backend URL:"
+      );
+
+      console.log(
+        "https://agroconnect-backend-9nvp.onrender.com"
+      );
+
+      console.log(
+        "=============================================="
       );
     });
   } catch (error) {
-    console.error("❌ Server startup failed:", error);
+    console.error(
+      "❌ Server startup failed:",
+      error
+    );
+
     process.exit(1);
   }
 };
