@@ -20,6 +20,9 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [orderLoading, setOrderLoading] = useState(false);
 
+  const quantityNumber = Number(order.quantity || 0);
+  const estimatedTotal = quantityNumber * Number(product?.price_per_unit || 0);
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -54,6 +57,14 @@ export default function ProductDetails() {
 
     if (user.role !== "distributor") {
       setError("Only distributors can place orders.");
+      return;
+    }
+
+    const quantityNumber = Number(order.quantity);
+    const minimum = Number(product.min_order_quantity || 1);
+    const available = Number(product.quantity || 0);
+    if (!Number.isFinite(quantityNumber) || quantityNumber < minimum || quantityNumber > available) {
+      setError(`Enter a quantity between ${minimum} and ${available} ${product.unit}.`);
       return;
     }
 
@@ -198,10 +209,6 @@ export default function ProductDetails() {
                   <strong>{product.farmer_name || "N/A"}</strong>
                 </div>
 
-                <div>
-                  <span>Phone</span>
-                  <strong>{product.farmer_phone || "N/A"}</strong>
-                </div>
               </div>
             </div>
           </div>
@@ -231,6 +238,12 @@ export default function ProductDetails() {
               placeholder={`Minimum ${product.min_order_quantity || 1} ${product.unit}`}
               required
             />
+
+            <div className="product-price-box" style={{ margin: "14px 0" }}>
+              <p>Estimated Order Value</p>
+              <h3>₹{estimatedTotal.toLocaleString("en-IN")}</h3>
+              <small>Final amount is confirmed by the farmer before fulfilment.</small>
+            </div>
 
             <label>Message</label>
             <textarea

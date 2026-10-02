@@ -49,6 +49,7 @@ export default function Navbar() {
               {user.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
               <NavLink to="/business">Business Hub</NavLink>
               <NavLink to="/expansion">Expansion</NavLink>
+              <NavLink to="/scale">Scale Intelligence</NavLink>
               <NavLink to="/launch">Phase 5</NavLink>
               <NavLink to="/connect">Phase 6</NavLink>
               <NavLink to="/notifications">Notifications</NavLink>

@@ -9,12 +9,16 @@ export default function Marketplace() {
     category: "",
     district: "",
     state: "",
+    min_price: "",
+    max_price: "",
+    sort: "newest",
   });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, totalPages: 0 });
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (pageOverride = 1) => {
     try {
       setLoading(true);
       setError("");
@@ -27,8 +31,11 @@ export default function Marketplace() {
         }
       });
 
+      params.append("page", String(pageOverride));
+      params.append("limit", "12");
       const res = await api.get(`/products?${params.toString()}`);
       setProducts(res.data.products || []);
+      setPagination(res.data.pagination || { page: pageOverride, limit: 12, total: (res.data.products || []).length, totalPages: 1 });
     } catch (err) {
   console.error("Marketplace API Error:", err);
 
@@ -61,16 +68,8 @@ export default function Marketplace() {
   };
 
   const clearFilters = () => {
-    setFilters({
-      search: "",
-      category: "",
-      district: "",
-      state: "",
-    });
-
-    setTimeout(() => {
-      fetchProducts();
-    }, 100);
+    setFilters({ search: "", category: "", district: "", state: "", min_price: "", max_price: "", sort: "newest" });
+    setTimeout(() => fetchProducts(1), 100);
   };
 
   return (
@@ -145,6 +144,26 @@ export default function Marketplace() {
             />
           </div>
 
+          <div>
+            <label>Min Price (₹)</label>
+            <input name="min_price" type="number" min="0" placeholder="0" value={filters.min_price} onChange={handleChange} />
+          </div>
+
+          <div>
+            <label>Max Price (₹)</label>
+            <input name="max_price" type="number" min="0" placeholder="Any" value={filters.max_price} onChange={handleChange} />
+          </div>
+
+          <div>
+            <label>Sort By</label>
+            <select name="sort" value={filters.sort} onChange={handleChange}>
+              <option value="newest">Newest</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+              <option value="quantity_high">Highest Stock</option>
+            </select>
+          </div>
+
           <div className="filter-actions">
             <button className="btn search-btn" type="submit">
               Search
@@ -183,7 +202,7 @@ export default function Marketplace() {
                 <h2>Fresh Crop Products</h2>
               </div>
 
-              <span>{products.length} Results</span>
+              <span>{pagination.total || products.length} Results</span>
             </div>
 
             <div className="marketplace-products-grid">
@@ -191,6 +210,14 @@ export default function Marketplace() {
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
+
+            {pagination.totalPages > 1 && (
+              <div className="marketplace-pagination" style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"12px",marginTop:"24px"}}>
+                <button className="btn small secondary" disabled={pagination.page <= 1} onClick={() => fetchProducts(pagination.page - 1)}>Previous</button>
+                <span>Page {pagination.page} of {pagination.totalPages}</span>
+                <button className="btn small" disabled={pagination.page >= pagination.totalPages} onClick={() => fetchProducts(pagination.page + 1)}>Next</button>
+              </div>
+            )}
           </section>
         )}
       </div>

@@ -2,16 +2,6 @@ import { Link } from "react-router-dom";
 import VerificationBadge from "./VerificationBadge";
 
 export default function ProductCard({ product }) {
-  const phone = product?.farmer_phone || "";
-  const cleanPhone = phone.replace(/\D/g, "");
-  const whatsappPhone = cleanPhone.startsWith("91")
-    ? cleanPhone
-    : `91${cleanPhone}`;
-
-  const whatsappMessage = encodeURIComponent(
-    `Hello, I am interested in your product: ${product?.crop_name}. Price: ₹${product?.price_per_unit}/${product?.unit}. Location: ${product?.location}`
-  );
-
   return (
     <div className="product-card">
       <div className="product-image">
@@ -29,61 +19,17 @@ export default function ProductCard({ product }) {
         </div>
 
         <h3>{product?.crop_name}</h3>
+        <p>{product?.description || "Fresh agricultural produce listed by a verified farmer."}</p>
 
-        <p>{product?.description}</p>
-
-        <div className="price">
-          ₹{product?.price_per_unit}/{product?.unit}
-        </div>
-
-        <p className="product-meta">
-          Available: {product?.quantity} {product?.unit}
-        </p>
-
-        <p className="product-meta">
-          MOQ: {product?.min_order_quantity || 1} {product?.unit} · Grade{" "}
-          {product?.quality_grade || "Standard"}
-        </p>
-
+        <div className="price">₹{product?.price_per_unit}/{product?.unit}</div>
+        <p className="product-meta">Available: {product?.quantity} {product?.unit}</p>
+        <p className="product-meta">MOQ: {product?.min_order_quantity || 1} {product?.unit} · Grade {product?.quality_grade || "Standard"}</p>
         <p className="product-meta">Location: {product?.location}</p>
-
-        <p className="product-meta">
-          Farmer: {product?.farmer_name || "N/A"}
-        </p>
+        <p className="product-meta">Farmer: {product?.farmer_name || "Verified Farmer"}</p>
 
         <div className="product-actions">
-          <Link className="btn small view-btn" to={`/products/${product.id}`}>
-            View
-          </Link>
-
-          <Link className="btn small order-btn" to={`/products/${product.id}`}>
-            Order
-          </Link>
-
-          {phone ? (
-            <a className="btn small call-btn" href={`tel:${phone}`}>
-              Call
-            </a>
-          ) : (
-            <button className="btn small call-btn" disabled>
-              Call
-            </button>
-          )}
-
-          {phone ? (
-            <a
-              className="btn small whatsapp-btn"
-              href={`https://wa.me/${whatsappPhone}?text=${whatsappMessage}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              WhatsApp
-            </a>
-          ) : (
-            <button className="btn small whatsapp-btn" disabled>
-              WhatsApp
-            </button>
-          )}
+          <Link className="btn small view-btn" to={`/products/${product.id}`}>View Details</Link>
+          <Link className="btn small order-btn" to={`/products/${product.id}`}>Request Order</Link>
         </div>
       </div>
     </div>

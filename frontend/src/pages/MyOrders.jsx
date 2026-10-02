@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 export default function MyOrders() {
   const { user } = useAuth();
@@ -192,8 +193,19 @@ export default function MyOrders() {
                               </button>
                             )}
 
-                            {["completed", "rejected"].includes(order.status) && (
-                              <span className="view-text">No action required</span>
+                            {order.status === "accepted" && (
+                              <Link className="btn small secondary" to="/finance">Invoice &amp; Payment</Link>
+                            )}
+
+                            {order.status === "completed" && (
+                              <>
+                                <Link className="btn small secondary" to="/finance">Invoice</Link>
+                                <Link className="btn small" to="/trust">Review</Link>
+                              </>
+                            )}
+
+                            {order.status === "rejected" && (
+                              <span className="view-text">Order rejected</span>
                             )}
                           </div>
                         ) : (

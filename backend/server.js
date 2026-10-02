@@ -27,6 +27,7 @@ import trustRoutes from "./routes/trustRoutes.js";
 import communicationRoutes from "./routes/communicationRoutes.js";
 import advisoryRoutes from "./routes/advisoryRoutes.js";
 import preferenceRoutes from "./routes/preferenceRoutes.js";
+import scaleRoutes from "./routes/scaleRoutes.js";
 import { productUploadDir } from "./middleware/uploadMiddleware.js";
 
 dotenv.config();
@@ -402,6 +403,11 @@ app.use(
 app.use(
   "/api/preferences",
   preferenceRoutes
+);
+
+app.use(
+  "/api/scale",
+  scaleRoutes
 );
 
 /* =========================================================

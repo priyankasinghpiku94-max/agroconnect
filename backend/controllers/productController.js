@@ -66,13 +66,15 @@ const selectFields = `
   p.created_at,
   p.updated_at,
   u.fullName AS farmer_name,
-  u.phoneNumber AS farmer_phone,
   (u.verificationStatus = 'verified') AS farmer_verified
 `;
 
 export const getProducts = async (req, res) => {
   try {
-    const { search, category, district, state } = req.query;
+    const { search, category, district, state, min_price, max_price, sort, page, limit } = req.query;
+    const safePage = Math.max(1, Number.parseInt(page, 10) || 1);
+    const safeLimit = Math.min(50, Math.max(1, Number.parseInt(limit, 10) || 12));
+    const offset = (safePage - 1) * safeLimit;
 
     let query = `
       SELECT ${selectFields}
@@ -101,10 +103,38 @@ export const getProducts = async (req, res) => {
       query += " AND p.state LIKE ?";
       values.push(`%${String(state).trim().slice(0, 80)}%`);
     }
+    if (min_price !== undefined && min_price !== "") {
+      const min = Number(min_price);
+      if (Number.isFinite(min) && min >= 0) { query += " AND p.price >= ?"; values.push(min); }
+    }
+    if (max_price !== undefined && max_price !== "") {
+      const max = Number(max_price);
+      if (Number.isFinite(max) && max >= 0) { query += " AND p.price <= ?"; values.push(max); }
+    }
 
-    query += " ORDER BY p.id DESC";
+    const sortMap = {
+      newest: "p.id DESC",
+      price_low: "p.price ASC, p.id DESC",
+      price_high: "p.price DESC, p.id DESC",
+      quantity_high: "p.quantity DESC, p.id DESC",
+    };
+    query += ` ORDER BY ${sortMap[String(sort || "newest")] || sortMap.newest} LIMIT ? OFFSET ?`;
+    values.push(safeLimit, offset);
+
     const [products] = await db.query(query, values);
-    res.json({ success: true, products: mapImages(req, products) });
+
+    const countQuery = query
+      .replace(/ ORDER BY[\s\S]*$/, "")
+      .replace(/SELECT[\s\S]*?FROM products p/, "SELECT COUNT(*) AS total FROM products p");
+    const countValues = values.slice(0, -2);
+    const [[countRow]] = await db.query(countQuery, countValues);
+    const total = Number(countRow?.total || 0);
+
+    res.json({
+      success: true,
+      products: mapImages(req, products),
+      pagination: { page: safePage, limit: safeLimit, total, totalPages: Math.ceil(total / safeLimit) },
+    });
   } catch (error) {
     console.error("Get products error:", error);
     res.status(500).json({ success: false, message: "Failed to fetch products" });

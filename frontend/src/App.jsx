@@ -33,6 +33,7 @@ import CommunicationHub from "./pages/CommunicationHub";
 import BusinessMessages from "./pages/BusinessMessages";
 import WeatherAdvisory from "./pages/WeatherAdvisory";
 import NotificationPreferences from "./pages/NotificationPreferences";
+import ScaleIntelligence from "./pages/ScaleIntelligence";
 
 export default function App() {
   return (
@@ -159,6 +160,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <BusinessAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/scale"
+          element={
+            <ProtectedRoute roles={["farmer", "distributor", "admin"]}>
+              <ScaleIntelligence />
             </ProtectedRoute>
           }
         />
